@@ -60,16 +60,11 @@ if __name__ == '__main__':
             destY = (row - minRow) * 256
             destX = (col - minCol) * 256
         
-            try:
-                url = provider.url(col, row, zoom)
-
-                print row, col, zoom, '->', url, '->', destX, destY
-                
-                img = PIL.Image.open(StringIO.StringIO(urllib.urlopen(url).read()))
-                destImg.paste(img, (destX, destY))
-                
-            except Exception, e:
-                print e
+            url = provider.url(col, row, zoom)
+            print row, col, zoom, '->', url, '->', destX, destY
+            
+            img = PIL.Image.open(StringIO.StringIO(urllib.urlopen(url).read()))
+            destImg.paste(img, (destX, destY))
             
             #time.sleep(10)
             
