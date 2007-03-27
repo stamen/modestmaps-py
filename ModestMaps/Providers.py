@@ -1,4 +1,5 @@
-import random, Tiles
+from Core import Coordinate
+from Geo import LinearProjection, MercatorProjection, Transformation
 
 ids = ('MICROSOFT_ROAD', 'MICROSOFT_AERIAL', 'MICROSOFT_HYBRID',
        'GOOGLE_ROAD',    'GOOGLE_AERIAL',    'GOOGLE_HYBRID',
@@ -6,27 +7,18 @@ ids = ('MICROSOFT_ROAD', 'MICROSOFT_AERIAL', 'MICROSOFT_HYBRID',
        'BLUE_MARBLE',
        'OPEN_STREET_MAP')
 
-class Provider:
-    """
-    """
-
-    def __init__(self, id):
-        if id not in ids:
-            raise KeyError("Unknown provider: '%s'" % id)
-            
-        self.id = id
+class IMapProvider:
+    def __init__(self):
+        raise NotImplementedError("Abstract method not implemented by subclass.")
         
-    def url(self, column, row, zoom):
-        """ Retrieve a tile URL for a given column, row, zoom.
-        """
-        if self.id == 'MICROSOFT_ROAD':
-            return 'http://r%d.ortho.tiles.virtualearth.net/tiles/r%s.png?g=45' % (random.randint(0,3), Tiles.toMicrosoft(column, row, zoom))
+    def getTileUrl(self, coordinate):
+        raise NotImplementedError("Abstract method not implemented by subclass.")
 
-        if self.id == 'MICROSOFT_HYBRID':
-            return 'http://h%d.ortho.tiles.virtualearth.net/tiles/h%s.jpeg?g=45' % (random.randint(0,3), Tiles.toMicrosoft(column, row, zoom))
+    def locationCoordinate(self, location):
+        return self.projection.locationCoordinate(location)
 
-        if self.id == 'MICROSOFT_AERIAL':
-            return 'http://a%d.ortho.tiles.virtualearth.net/tiles/a%s.jpeg?g=45' % (random.randint(0,3), Tiles.toMicrosoft(column, row, zoom))
-            
-        else:
-            raise NotImplementedError("Unimplemented provider: '%s'" % self.id)
+    def coordinateLocation(self, location):
+        return self.projection.coordinateLocation(location)
+
+    def sourceCoordinate(self, coordinate):
+        raise NotImplementedError("Abstract method not implemented by subclass.")
