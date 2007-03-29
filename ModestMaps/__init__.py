@@ -38,7 +38,7 @@ def calculateMapExtent(provider, width, height, *args):
                          max([c.zoom for c in coordinates]))
                     
     # multiplication factor between horizontal span and map width
-    hFactor = (BR.column - TL.column) / (width / TILE_WIDTH)
+    hFactor = (BR.column - TL.column) / (float(width) / TILE_WIDTH)
 
     # multiplication factor expressed as base-2 logarithm, for zoom difference
     hZoomDiff = math.log(hFactor) / math.log(2)
@@ -47,7 +47,7 @@ def calculateMapExtent(provider, width, height, *args):
     hPossibleZoom = TL.zoom - math.ceil(hZoomDiff)
         
     # multiplication factor between vertical span and map height
-    vFactor = (BR.row - TL.row) / (height / TILE_HEIGHT)
+    vFactor = (BR.row - TL.row) / (float(height) / TILE_HEIGHT)
         
     # multiplication factor expressed as base-2 logarithm, for zoom difference
     vZoomDiff = math.log(vFactor) / math.log(2)
