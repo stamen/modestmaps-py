@@ -160,6 +160,10 @@ if __name__ == '__main__':
     mapImg = PIL.Image.new('RGB', (parser.width, parser.height))
     
     for job in jobs:
-        mapImg.paste(job.img, (job.point.x, job.point.y))
+        try:
+            mapImg.paste(job.img, (job.point.x, job.point.y))
+        except:
+            # something failed to paste, so we ignore it
+            pass
     
     mapImg.save(options.outfile)
