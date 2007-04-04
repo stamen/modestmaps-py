@@ -87,11 +87,11 @@ class RequestQueue(list):
     """ List of RequestJob objects, that's sensitive to when they're done.
     """
 
-    def done(self):
-        """ True if all contained jobs are done.
+    def pending(self):
+        """ True if any contained job is still pending.
         """
-        unfinished = [job for job in self if not job.done]
-        return len(unfinished) == 0
+        remaining = [job for job in self if not job.done]
+        return len(remaining) > 0
 
 parser = optparse.OptionParser()
 
@@ -153,7 +153,7 @@ if __name__ == '__main__':
     # if it takes any longer than 20 sec overhead + 10 sec per job, give up
     due = time.time() + 20 + len(jobs) * 10
     
-    while due > time.time() and not jobs.done():
+    while time.time() < due and jobs.pending():
         # hang around until they are done or we run out of time...
         time.sleep(1)
 
