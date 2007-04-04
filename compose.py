@@ -1,4 +1,4 @@
-import sys, math, PIL.Image, urllib, StringIO, optparse, thread, ModestMaps
+import sys, math, PIL.Image, urllib, StringIO, optparse, thread, ModestMaps, time
 
 def parseWidthHeight(option, opt, values, parser):
     if values[0] > 0 and values[1] > 0:
@@ -150,9 +150,12 @@ if __name__ == '__main__':
         # request all needed images
         thread.start_new_thread(job.do, (lock, options.verbose))
         
-    while not jobs.done():
-        # hang around until they are done...
-        pass
+    # if it takes any longer than 20 sec overhead + 10 sec per job, give up
+    due = time.time() + 20 + len(jobs) * 10
+    
+    while due > time.time() and not jobs.done():
+        # hang around until they are done or we run out of time...
+        time.sleep(1)
 
     mapImg = PIL.Image.new('RGB', (parser.width, parser.height))
     
