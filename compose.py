@@ -93,7 +93,13 @@ class RequestQueue(list):
         remaining = [job for job in self if not job.done]
         return len(remaining) > 0
 
-parser = optparse.OptionParser()
+usage = """compose.py [options]
+
+Map provider and output image dimensions MUST be specified before extent
+or center/zoom. Multiple extents and center/zooms may be specified, but
+only the last will be used."""
+
+parser = optparse.OptionParser(usage=usage)
 
 parser.add_option('-v', '--verbose', dest='verbose',
                   help='Make a bunch of noise',
