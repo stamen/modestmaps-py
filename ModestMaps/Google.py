@@ -55,11 +55,8 @@ class AerialProvider(AbstractProvider):
 class HybridProvider(AbstractProvider):
     def getTileUrls(self, coordinate):
         under = AerialProvider().getTileUrls(coordinate)[0]
-        over = 'http://mt%d.google.com/mt?n=404&v=%s&%s' % (random.randint(0, 3), HYBRID_VERSION, self.getZoomString(self.sourceCoordinate(coordinate)))
+        over = 'http://mt%d.google.com/mt?n=404&v=%s&%s' % (random.randint(0, 3), HYBRID_VERSION, RoadProvider().getZoomString(self.sourceCoordinate(coordinate)))
         return (under, over)
-
-    def getZoomString(self, coordinate):
-        return 'x=%d&y=%d&zoom=%d' % Tiles.toGoogleRoad(int(coordinate.column), int(coordinate.row), int(coordinate.zoom))
 
 if __name__ == '__main__':
     import doctest
