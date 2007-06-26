@@ -11,7 +11,7 @@ class IMapProvider:
     def __init__(self):
         raise NotImplementedError("Abstract method not implemented by subclass.")
         
-    def getTileUrl(self, coordinate):
+    def getTileUrls(self, coordinate):
         raise NotImplementedError("Abstract method not implemented by subclass.")
 
     def locationCoordinate(self, location):

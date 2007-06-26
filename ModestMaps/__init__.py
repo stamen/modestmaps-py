@@ -5,6 +5,7 @@ import Providers
 import Core
 import Geo
 import Microsoft
+import Google
 
 TILE_WIDTH = 256
 TILE_HEIGHT = 256

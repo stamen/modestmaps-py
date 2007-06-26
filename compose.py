@@ -24,6 +24,15 @@ def parseProvider(option, opt, value, parser):
     elif value == 'MICROSOFT_HYBRID':
         parser.provider = ModestMaps.Microsoft.HybridProvider()
         
+    elif value == 'GOOGLE_ROAD':
+        parser.provider = ModestMaps.Google.RoadProvider()
+        
+    elif value == 'GOOGLE_AERIAL':
+        parser.provider = ModestMaps.Google.AerialProvider()
+        
+    elif value == 'GOOGLE_HYBRID':
+        parser.provider = ModestMaps.Google.HybridProvider()
+        
     else:
         raise optparse.OptionValueError('Provider must be in eligible list (got: "%s")' % value)
 
@@ -62,26 +71,29 @@ class RequestJob:
             # don't bother?
             return
 
-        url = self.provider.getTileUrl(self.coord)
-
+        urls = self.provider.getTileUrls(self.coord)
+        
         if verbose:
-            print 'Requesting', url, 'in thread', thread.get_ident()
+            print 'Requesting', urls, 'in thread', thread.get_ident()
 
         # this is the time-consuming part
         try:
-            img = PIL.Image.open(StringIO.StringIO(urllib.urlopen(url).read()))
+            imgs = [PIL.Image.open(StringIO.StringIO(urllib.urlopen(url).read())).convert('RGBA')
+                    for url in urls]
 
         except:
-            print 'Failed', url, 'in thread', thread.get_ident()
-            
+            imgs = [None for url in urls]
+            if verbose:
+                print 'Failed', urls, 'in thread', thread.get_ident()
+                
         else:
-            if lock.acquire():
-                if verbose:
-                    print 'Received', url, 'in thread', thread.get_ident()
-    
-                self.img = img
-                self.done = True
-                lock.release()
+            if verbose:
+                print 'Received', urls, 'in thread', thread.get_ident()
+
+        if lock.acquire():
+            self.imgs = imgs
+            self.done = True
+            lock.release()
 
 class RequestQueue(list):
     """ List of RequestJob objects, that's sensitive to when they're done.
@@ -167,7 +179,8 @@ if __name__ == '__main__':
     
     for job in jobs:
         try:
-            mapImg.paste(job.img, (job.point.x, job.point.y))
+            for img in job.imgs:
+                mapImg.paste(img, (job.point.x, job.point.y), img)
         except:
             # something failed to paste, so we ignore it
             pass
