@@ -1,6 +1,8 @@
 from Core import Coordinate
 from Geo import LinearProjection, MercatorProjection, Transformation
 
+import math
+
 ids = ('MICROSOFT_ROAD', 'MICROSOFT_AERIAL', 'MICROSOFT_HYBRID',
        'GOOGLE_ROAD',    'GOOGLE_AERIAL',    'GOOGLE_HYBRID',
        'YAHOO_ROAD',     'YAHOO_AERIAL',     'YAHOO_HYBRID',
@@ -22,3 +24,11 @@ class IMapProvider:
 
     def sourceCoordinate(self, coordinate):
         raise NotImplementedError("Abstract method not implemented by subclass.")
+
+    def sourceCoordinate(self, coordinate):
+        wrappedColumn = coordinate.column % math.pow(2, coordinate.zoom)
+        
+        while wrappedColumn < 0:
+            wrappedColumn += math.pow(2, coordinate.zoom)
+            
+        return Coordinate(coordinate.row, wrappedColumn, coordinate.zoom)

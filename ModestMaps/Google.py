@@ -22,7 +22,7 @@ from Core import Coordinate
 from Geo import MercatorProjection, Transformation
 from Providers import IMapProvider
 
-import math, random, Tiles
+import random, Tiles
 
 ROAD_VERSION = 'w2.52'
 AERIAL_VERSION = '18'
@@ -37,14 +37,6 @@ class AbstractProvider(IMapProvider):
 
     def getZoomString(self, coordinate):
         raise NotImplementedError()
-
-    def sourceCoordinate(self, coordinate):
-        wrappedColumn = coordinate.column % math.pow(2, coordinate.zoom)
-        
-        while wrappedColumn < 0:
-            wrappedColumn += math.pow(2, coordinate.zoom)
-            
-        return Coordinate(coordinate.row, wrappedColumn, coordinate.zoom)
 
 class RoadProvider(AbstractProvider):
     def getTileUrls(self, coordinate):

@@ -22,7 +22,7 @@ from Core import Coordinate
 from Geo import MercatorProjection, Transformation
 from Providers import IMapProvider
 
-import math, random, Tiles
+import random, Tiles
 
 class AbstractProvider(IMapProvider):
     def __init__(self):
@@ -32,15 +32,7 @@ class AbstractProvider(IMapProvider):
         self.projection = MercatorProjection(26, t)
 
     def getZoomString(self, coordinate):
-        return Tiles.toMicrosoftRoad(int(coordinate.column), int(coordinate.row), int(coordinate.zoom))
-
-    def sourceCoordinate(self, coordinate):
-        wrappedColumn = coordinate.column % math.pow(2, coordinate.zoom)
-        
-        while wrappedColumn < 0:
-            wrappedColumn += math.pow(2, coordinate.zoom)
-            
-        return Coordinate(coordinate.row, wrappedColumn, coordinate.zoom)
+        return Tiles.toMicrosoft(int(coordinate.column), int(coordinate.row), int(coordinate.zoom))
 
 class RoadProvider(AbstractProvider):
     def getTileUrls(self, coordinate):

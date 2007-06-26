@@ -4,8 +4,7 @@ import Tiles
 import Providers
 import Core
 import Geo
-import Microsoft
-import Google
+import Google, Yahoo, Microsoft
 
 TILE_WIDTH = 256
 TILE_HEIGHT = 256

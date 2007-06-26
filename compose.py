@@ -33,6 +33,15 @@ def parseProvider(option, opt, value, parser):
     elif value == 'GOOGLE_HYBRID':
         parser.provider = ModestMaps.Google.HybridProvider()
         
+    elif value == 'YAHOO_ROAD':
+        parser.provider = ModestMaps.Yahoo.RoadProvider()
+        
+    elif value == 'YAHOO_AERIAL':
+        parser.provider = ModestMaps.Yahoo.AerialProvider()
+        
+    elif value == 'YAHOO_HYBRID':
+        parser.provider = ModestMaps.Yahoo.HybridProvider()
+        
     else:
         raise optparse.OptionValueError('Provider must be in eligible list (got: "%s")' % value)
 
