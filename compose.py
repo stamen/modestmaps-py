@@ -138,7 +138,7 @@ parser.add_option('-e', '--extent', dest='extent', nargs=4,
                   action='callback', callback=parseExtent)
 
 parser.add_option('-p', '--provider', dest='provider',
-                  help='Map Provider', type='string',
+                  type='string', help='Map Provider, one of: MICROSOFT_ROAD, MICROSOFT_AERIAL, MICROSOFT_HYBRID, GOOGLE_ROAD, GOOGLE_AERIAL, GOOGLE_HYBRID, YAHOO_ROAD, YAHOO_AERIAL, YAHOO_HYBRID',
                   action='callback', callback=parseProvider)
 
 parser.add_option('-d', '--dimensions', dest='dimensions', nargs=2,
