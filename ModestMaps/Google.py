@@ -38,6 +38,12 @@ class AbstractProvider(IMapProvider):
     def getZoomString(self, coordinate):
         raise NotImplementedError()
 
+    def tileWidth(self):
+        return 256
+
+    def tileHeight(self):
+        return 256
+
 class RoadProvider(AbstractProvider):
     def getTileUrls(self, coordinate):
         return ('http://mt%d.google.com/mt?n=404&v=%s&%s' % (random.randint(0, 3), ROAD_VERSION, self.getZoomString(self.sourceCoordinate(coordinate))),)

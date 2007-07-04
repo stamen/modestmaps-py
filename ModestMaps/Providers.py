@@ -16,6 +16,12 @@ class IMapProvider:
     def getTileUrls(self, coordinate):
         raise NotImplementedError("Abstract method not implemented by subclass.")
 
+    def tileWidth(self):
+        raise NotImplementedError("Abstract method not implemented by subclass.")
+
+    def tileHeight(self):
+        raise NotImplementedError("Abstract method not implemented by subclass.")
+    
     def locationCoordinate(self, location):
         return self.projection.locationCoordinate(location)
 

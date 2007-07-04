@@ -38,6 +38,12 @@ class AbstractProvider(IMapProvider):
     def getZoomString(self, coordinate):
         return 'x=%d&y=%d&z=%d' % Tiles.toYahoo(int(coordinate.column), int(coordinate.row), int(coordinate.zoom))
 
+    def tileWidth(self):
+        return 256
+
+    def tileHeight(self):
+        return 256
+
 class RoadProvider(AbstractProvider):
     def getTileUrls(self, coordinate):
         return ('http://us.maps2.yimg.com/us.png.maps.yimg.com/png?v=%s&t=m&%s' % (ROAD_VERSION, self.getZoomString(self.sourceCoordinate(coordinate))),)

@@ -34,6 +34,12 @@ class AbstractProvider(IMapProvider):
     def getZoomString(self, coordinate):
         return Tiles.toMicrosoft(int(coordinate.column), int(coordinate.row), int(coordinate.zoom))
 
+    def tileWidth(self):
+        return 256
+
+    def tileHeight(self):
+        return 256
+
 class RoadProvider(AbstractProvider):
     def getTileUrls(self, coordinate):
         return ('http://r%d.ortho.tiles.virtualearth.net/tiles/r%s.png?g=45' % (random.randint(0, 3), self.getZoomString(self.sourceCoordinate(coordinate))),)
