@@ -99,7 +99,44 @@ class TileRequest:
             imgs = [None for url in urls]
             if verbose:
                 print 'Failed', urls, 'in thread', thread.get_ident()
-                
+            
+            # everything below here needs to be made into a recursive call or something.
+            
+            zoomed = self.coord.zoomBy(-1)
+            container = zoomed.container()
+            
+            if verbose:
+                print '   ', self.coord, self.offset, zoomed, container, 'in thread', thread.get_ident()
+            
+            urls = self.provider.getTileUrls(container)
+            
+            if verbose:
+                print '    Requesting', urls, 'in thread', thread.get_ident()
+
+            imgs = [PIL.Image.open(StringIO.StringIO(urllib.urlopen(url).read())).convert('RGBA')
+                    for url in urls]
+
+            if verbose:
+                print '    Received', urls, 'in thread', thread.get_ident()
+            
+            w, h = self.provider.tileWidth(), self.provider.tileHeight()/2
+
+            if zoomed.row == container.row and zoomed.column == container.column:
+                # top left
+                if verbose:
+                    print '    Top left in thread', thread.get_ident()
+
+                imgs = [img.crop((0, 0, w/2, h/2)).resize((w, h))
+                        for img in imgs]
+            
+            if zoomed.row == container.row and zoomed.column != container.column:
+                # top right
+                if verbose:
+                    print '    Top right in thread', thread.get_ident()
+
+                imgs = [img.crop((w/2, 0, w, h/2)).resize((w, h))
+                        for img in imgs]
+
         else:
             if verbose:
                 print 'Received', urls, 'in thread', thread.get_ident()

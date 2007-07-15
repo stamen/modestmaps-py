@@ -54,11 +54,19 @@ class Coordinate:
     def copy(self):
         return Coordinate(self.row, self.column, self.zoom)
         
+    def container(self):
+        return Coordinate(math.floor(self.row), math.floor(self.column), self.zoom)
+
     def zoomTo(self, destination):
         return Coordinate(self.row * math.pow(2, destination - self.zoom),
                           self.column * math.pow(2, destination - self.zoom),
                           destination)
     
+    def zoomBy(self, distance):
+        return Coordinate(self.row * math.pow(2, distance),
+                          self.column * math.pow(2, distance),
+                          self.zoom + distance)
+
     def up(self, distance=1):
         return Coordinate(self.row - distance, self.column, self.zoom)
 
