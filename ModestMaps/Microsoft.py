@@ -22,7 +22,7 @@ from Core import Coordinate
 from Geo import MercatorProjection, Transformation
 from Providers import IMapProvider
 
-import random, Tiles
+import random, Tiles, md5
 
 class AbstractProvider(IMapProvider):
     def __init__(self):
@@ -39,6 +39,11 @@ class AbstractProvider(IMapProvider):
 
     def tileHeight(self):
         return 256
+
+    def is404Image(self, raw_data):
+        """
+        """
+        return len(raw_data) == 1033 and md5.md5(raw_data).hexdigest() == 'c13269481c73de6e18589f9fbc3bdf7e'
 
 class RoadProvider(AbstractProvider):
     def getTileUrls(self, coordinate):

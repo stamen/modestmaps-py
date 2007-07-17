@@ -1,4 +1,4 @@
-import PIL.Image, urllib, StringIO, math, thread, time
+import PIL.Image, urllib, StringIO, math, thread, time, md5
 
 import Tiles
 import Providers
@@ -73,6 +73,7 @@ class TileRequest:
         self.provider = provider
         self.coord = coord
         self.offset = offset
+        self.quadrant = 'all'
         
     def loaded(self):
         return self.done
@@ -92,54 +93,57 @@ class TileRequest:
 
         # this is the time-consuming part
         try:
-            imgs = [PIL.Image.open(StringIO.StringIO(urllib.urlopen(url).read())).convert('RGBA')
-                    for url in urls]
+            data = [urllib.urlopen(url).read() for url in urls]
+            
+            if max([self.provider.is404Image(datum) for datum in data]):
+                raise Exception('Provider says this is a 404 image')
+
+            imgs = [PIL.Image.open(StringIO.StringIO(datum)).convert('RGBA')
+                    for datum in data]
 
         except:
-            imgs = [None for url in urls]
             if verbose:
                 print 'Failed', urls, 'in thread', thread.get_ident()
             
-            # everything below here needs to be made into a recursive call or something.
-            
             zoomed = self.coord.zoomBy(-1)
-            container = zoomed.container()
+            self.coord = zoomed.container()
             
-            if verbose:
-                print '   ', self.coord, self.offset, zoomed, container, 'in thread', thread.get_ident()
+            if zoomed.row == self.coord.row and zoomed.column == self.coord.column:
+                self.quadrant = 'top left'
             
-            urls = self.provider.getTileUrls(container)
+            elif zoomed.row == self.coord.row and zoomed.column != self.coord.column:
+                self.quadrant = 'top right'
+
+            elif zoomed.row != self.coord.row and zoomed.column == self.coord.column:
+                self.quadrant = 'bottom left'
             
-            if verbose:
-                print '    Requesting', urls, 'in thread', thread.get_ident()
+            elif zoomed.row != self.coord.row and zoomed.column != self.coord.column:
+                self.quadrant = 'bottom right'
 
-            imgs = [PIL.Image.open(StringIO.StringIO(urllib.urlopen(url).read())).convert('RGBA')
-                    for url in urls]
-
-            if verbose:
-                print '    Received', urls, 'in thread', thread.get_ident()
-            
-            w, h = self.provider.tileWidth(), self.provider.tileHeight()/2
-
-            if zoomed.row == container.row and zoomed.column == container.column:
-                # top left
-                if verbose:
-                    print '    Top left in thread', thread.get_ident()
-
-                imgs = [img.crop((0, 0, w/2, h/2)).resize((w, h))
-                        for img in imgs]
-            
-            if zoomed.row == container.row and zoomed.column != container.column:
-                # top right
-                if verbose:
-                    print '    Top right in thread', thread.get_ident()
-
-                imgs = [img.crop((w/2, 0, w, h/2)).resize((w, h))
-                        for img in imgs]
+            self.load(lock, verbose)
+            return
 
         else:
             if verbose:
                 print 'Received', urls, 'in thread', thread.get_ident()
+
+            w, h = self.provider.tileWidth(), self.provider.tileHeight()
+
+            if self.quadrant == 'top left':
+                imgs = [img.crop((0, 0, w/2, h/2)).resize((w, h))
+                        for img in imgs]
+            
+            elif self.quadrant == 'top right':
+                imgs = [img.crop((w/2, 0, w, h/2)).resize((w, h))
+                        for img in imgs]
+
+            elif self.quadrant == 'bottom left':
+                imgs = [img.crop((0, h/2, w/2, h)).resize((w, h))
+                        for img in imgs]
+            
+            elif self.quadrant == 'bottom right':
+                imgs = [img.crop((w/2, h/2, w, h)).resize((w, h))
+                        for img in imgs]
 
         if lock.acquire():
             self.imgs = imgs
