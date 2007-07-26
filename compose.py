@@ -1,3 +1,5 @@
+# vim:et sts=4 sw=4:
+
 import sys, math, optparse, ModestMaps
 
 def parseWidthHeight(option, opt, values, parser):
@@ -107,4 +109,4 @@ if __name__ == '__main__':
     dim = ModestMaps.Core.Point(parser.width, parser.height)
     map = ModestMaps.Map(parser.provider, dim, parser.coord, parser.offset)
 
-	map.draw(options.verbose).save(options.outfile)
+    map.draw(options.verbose).save(options.outfile)
