@@ -68,6 +68,10 @@ def calculateMapExtent(provider, width, height, *args):
     return calculateMapCenter(provider, centerCoord)
     
 class TileRequest:
+    
+    # how many times to retry a failing tile
+    MAX_ATTEMPTS = 5
+
     def __init__(self, provider, coord, offset):
         self.done = False
         self.provider = provider
@@ -80,7 +84,7 @@ class TileRequest:
     def images(self):
         return self.imgs
     
-    def load(self, lock, verbose):
+    def load(self, lock, verbose, attempt=1):
         if self.done:
             # don't bother?
             return
@@ -88,7 +92,7 @@ class TileRequest:
         urls = self.provider.getTileUrls(self.coord)
         
         if verbose:
-            print 'Requesting', urls, 'in thread', thread.get_ident()
+            print 'Requesting', urls, 'in thread', thread.get_ident(), '- attempt no.', attempt
 
         # this is the time-consuming part
         try:
@@ -96,14 +100,17 @@ class TileRequest:
                     for url in urls]
 
         except:
-            imgs = [None for url in urls]
-            
             if verbose:
-                print 'Failed', urls, 'in thread', thread.get_ident()
+                print 'Failed', urls, 'in thread', thread.get_ident(), '- attempt no.', attempt
+
+            if attempt < TileRequest.MAX_ATTEMPTS:
+                return self.load(lock, verbose, attempt+1)
+            else:
+                imgs = [None for url in urls]
 
         else:
             if verbose:
-                print 'Received', urls, 'in thread', thread.get_ident()
+                print 'Received', urls, 'in thread', thread.get_ident(), '- attempt no.', attempt
 
         if lock.acquire():
             self.imgs = imgs
