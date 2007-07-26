@@ -19,9 +19,9 @@ class IMapProvider:
     def getTileUrls(self, coordinate):
         raise NotImplementedError("Abstract method not implemented by subclass.")
 
-    def is404Image(self, raw_data):
-        return False
-
+    def tileWidth(self):
+        raise NotImplementedError("Abstract method not implemented by subclass.")
+    
     def tileHeight(self):
         raise NotImplementedError("Abstract method not implemented by subclass.")
     
