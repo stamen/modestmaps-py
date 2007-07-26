@@ -92,7 +92,7 @@ class TileRequest:
         urls = self.provider.getTileUrls(self.coord)
         
         if verbose:
-            print 'Requesting', urls, 'in thread', thread.get_ident(), '- attempt no.', attempt
+            print 'Requesting', urls, '- attempt no.', attempt, 'in thread', thread.get_ident()
 
         # this is the time-consuming part
         try:
@@ -101,7 +101,7 @@ class TileRequest:
 
         except:
             if verbose:
-                print 'Failed', urls, 'in thread', thread.get_ident(), '- attempt no.', attempt
+                print 'Failed', urls, '- attempt no.', attempt, 'in thread', thread.get_ident()
 
             if attempt < TileRequest.MAX_ATTEMPTS:
                 return self.load(lock, verbose, attempt+1)
@@ -110,7 +110,7 @@ class TileRequest:
 
         else:
             if verbose:
-                print 'Received', urls, 'in thread', thread.get_ident(), '- attempt no.', attempt
+                print 'Received', urls, '- attempt no.', attempt, 'in thread', thread.get_ident()
 
         if lock.acquire():
             self.imgs = imgs
