@@ -107,4 +107,4 @@ if __name__ == '__main__':
     dim = ModestMaps.Core.Point(parser.width, parser.height)
     map = ModestMaps.Map(parser.provider, dim, parser.coord, parser.offset)
 
-    map.draw(options.verbose).save(options.outfile or sys.stdout)
+	map.draw(options.verbose).save(options.outfile)
