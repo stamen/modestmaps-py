@@ -7,15 +7,15 @@
 
 >>> p = AerialProvider()
 >>> p.getTileUrls(Coordinate(25322, 10507, 16)) #doctest: +ELLIPSIS
-('http://a....ortho.tiles.virtualearth.net/tiles/a0230102122203031.jpeg?g=90&shading=hill',)
+('http://a....ortho.tiles.virtualearth.net/tiles/a0230102122203031.jpeg?g=90',)
 >>> p.getTileUrls(Coordinate(25333, 10482, 16)) #doctest: +ELLIPSIS
-('http://a....ortho.tiles.virtualearth.net/tiles/a0230102033330212.jpeg?g=90&shading=hill',)
+('http://a....ortho.tiles.virtualearth.net/tiles/a0230102033330212.jpeg?g=90',)
 
 >>> p = HybridProvider()
 >>> p.getTileUrls(Coordinate(25322, 10507, 16)) #doctest: +ELLIPSIS
-('http://h....ortho.tiles.virtualearth.net/tiles/h0230102122203031.jpeg?g=90&shading=hill',)
+('http://h....ortho.tiles.virtualearth.net/tiles/h0230102122203031.jpeg?g=90',)
 >>> p.getTileUrls(Coordinate(25333, 10482, 16)) #doctest: +ELLIPSIS
-('http://h....ortho.tiles.virtualearth.net/tiles/h0230102033330212.jpeg?g=90&shading=hill',)
+('http://h....ortho.tiles.virtualearth.net/tiles/h0230102033330212.jpeg?g=90',)
 """
 
 from Core import Coordinate
@@ -46,11 +46,11 @@ class RoadProvider(AbstractProvider):
 
 class AerialProvider(AbstractProvider):
     def getTileUrls(self, coordinate):
-        return ('http://a%d.ortho.tiles.virtualearth.net/tiles/a%s.jpeg?g=90&shading=hill' % (random.randint(0, 3), self.getZoomString(self.sourceCoordinate(coordinate))),)
+        return ('http://a%d.ortho.tiles.virtualearth.net/tiles/a%s.jpeg?g=90' % (random.randint(0, 3), self.getZoomString(self.sourceCoordinate(coordinate))),)
 
 class HybridProvider(AbstractProvider):
     def getTileUrls(self, coordinate):
-        return ('http://h%d.ortho.tiles.virtualearth.net/tiles/h%s.jpeg?g=90&shading=hill' % (random.randint(0, 3), self.getZoomString(self.sourceCoordinate(coordinate))),)
+        return ('http://h%d.ortho.tiles.virtualearth.net/tiles/h%s.jpeg?g=90' % (random.randint(0, 3), self.getZoomString(self.sourceCoordinate(coordinate))),)
 
 if __name__ == '__main__':
     import doctest
