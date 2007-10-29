@@ -1,3 +1,12 @@
+"""
+>>> m = Map(Microsoft.RoadProvider(), Core.Point(600, 600), Core.Coordinate(3165, 1313, 13), Core.Point(-144, -94))
+>>> p = m.locationPoint(Geo.Location(37.804274, -122.262940))
+>>> p
+(370.724, 342.549)
+>>> m.pointLocation(p)
+(37.804, -122.263)
+"""
+
 import PIL.Image, urllib, StringIO, math, thread, time
 
 import Tiles
@@ -142,7 +151,7 @@ class Map:
                 Base tile, instance of Coordinate
                 
             offset
-                Position of base tile, instance of Point
+                Position of base tile relative to map center, instance of Point
         """
         self.provider = provider
         self.dimensions = dimensions
@@ -151,7 +160,51 @@ class Map:
         
     def __str__(self):
         return 'Map(%(provider)s, %(dimensions)s, %(coordinate)s, %(offset)s)' % self.__dict__
+
+    def locationPoint(self, location):
+        """ Return an x, y point on the map image for a given geographical location.
+        """
+        point = Core.Point(self.offset.x, self.offset.y)
+        coord = self.provider.locationCoordinate(location).zoomTo(self.coordinate.zoom)
         
+        # distance from the known coordinate offset
+        point.x += self.provider.tileWidth() * (coord.column - self.coordinate.column)
+        point.y += self.provider.tileHeight() * (coord.row - self.coordinate.row)
+        
+        # because of the center/corner business
+        point.x += self.dimensions.x/2
+        point.y += self.dimensions.y/2
+        
+        return point
+        
+    def pointLocation(self, point):
+        """ Return a geographical location on the map image for a given x, y point.
+        """
+        hizoomCoord = self.coordinate.zoomTo(Core.Coordinate.MAX_ZOOM)
+        
+        # because of the center/corner business
+        point = Core.Point(point.x - self.dimensions.x/2,
+                           point.y - self.dimensions.y/2)
+        
+        # distance in tile widths from reference tile to point
+        xTiles = (point.x - self.offset.x) / self.provider.tileWidth();
+        yTiles = (point.y - self.offset.y) / self.provider.tileHeight();
+        
+        # distance in rows & columns at maximum zoom
+        xDistance = xTiles * math.pow(2, (Core.Coordinate.MAX_ZOOM - self.coordinate.zoom));
+        yDistance = yTiles * math.pow(2, (Core.Coordinate.MAX_ZOOM - self.coordinate.zoom));
+        
+        # new point coordinate reflecting that distance
+        coord = Core.Coordinate(round(hizoomCoord.row + yDistance),
+                                round(hizoomCoord.column + xDistance),
+                                hizoomCoord.zoom)
+
+        coord = coord.zoomTo(self.coordinate.zoom)
+        
+        location = self.provider.coordinateLocation(coord)
+        
+        return location
+
     def draw(self, verbose=False):
         """ Draw map out to a PIL.Image and return it.
         """
@@ -199,3 +252,7 @@ class Map:
                 pass
         
         return mapImg
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()
