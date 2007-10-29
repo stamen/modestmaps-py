@@ -35,8 +35,12 @@
 >>> m = MercatorProjection(10)
 >>> m.locationCoordinate(Location(0, 0))
 (-0.000, 0.000 @10.000)
+>>> m.coordinateLocation(Coordinate(0, 0, 10))
+(0.000, 0.000)
 >>> m.locationCoordinate(Location(37, -122))
 (0.696, -2.129 @10.000)
+>>> m.coordinateLocation(Coordinate(0.696, -2.129, 10.000))
+(37.001, -121.983)
 """
 
 import math
@@ -86,7 +90,7 @@ class IProjection:
     
     def unproject(self, point):
         if(self.transformation):
-            point = self.transform.untransformation(point)
+            point = self.transformation.untransform(point)
         point = self.rawUnproject(point)
         return point
         
@@ -115,7 +119,7 @@ class MercatorProjection(IProjection):
 
     def rawUnproject(self, point):
         return Point(point.x,
-                     2 * math.atan(math.pow(math.e, point.y)) - 0.5 + math.pi)
+                     2 * math.atan(math.pow(math.e, point.y)) - 0.5 * math.pi)
 
 if __name__ == '__main__':
     import doctest
