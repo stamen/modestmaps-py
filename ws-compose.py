@@ -63,33 +63,49 @@ class WebRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     # ##########################################################
     
     def draw_map (self, args) :
-        
         try :
 
-            provider = self.load_provider(args['provider'])
-            loc = ModestMaps.Geo.Location(args['latitude'], args['longitude'])
-
-            # Migurski : "coordinate.zoomTo() returns a copy,
-            # rather than modifying the coordinate in-place."
-            
-            coordinate = provider.locationCoordinate(loc)            
-            coordinate = coordinate.zoomTo(args['zoom'])
-            
-            coord, offset = ModestMaps.calculateMapCenter(provider, coordinate)
-            dim = ModestMaps.Core.Point(args['width'], args['height'])
-
-            map = ModestMaps.Map(provider, dim, coord, offset)            
-            img = map.draw()
-
-            if args['marker'] :
-                self.add_marker(img, args)
-                
-            return img
+            if args.has_key('bbox') :
+                return self.draw_map_extentified(args)
+            else :
+                return self.draw_map_centered(args)
             
         except Exception, e :
             self.error(200, "composer error : %s" % e)
             return False
 
+    # ##########################################################
+
+    def draw_map_extentified (self, args) :
+        self.error(999, "I'm sorry, Dave. Ican't let you do that.")
+    
+    # ##########################################################
+    
+    def draw_map_centered (self, args) :
+        
+        provider = self.load_provider(args['provider'])
+        loc = ModestMaps.Geo.Location(args['latitude'], args['longitude'])
+        
+        # Migurski : "coordinate.zoomTo() returns a copy,
+        # rather than modifying the coordinate in-place."
+        
+        coordinate = provider.locationCoordinate(loc)            
+        coordinate = coordinate.zoomTo(args['zoom'])
+        
+        coord, offset = ModestMaps.calculateMapCenter(provider, coordinate)
+        dim = ModestMaps.Core.Point(args['width'], args['height'])
+        
+        map = ModestMaps.Map(provider, dim, coord, offset)            
+        img = map.draw()
+
+        if args['dither'] :
+            img = self.apply_atkinson_dithering(img)
+            
+        if args['marker'] :
+            self.add_marker(img, args)
+                
+        return img
+            
     # ##########################################################
 
     def pinwin(self) :
@@ -219,6 +235,35 @@ RU5ErkJggg=="""
         return self.__mrk
 
     # ##########################################################
+
+    #
+    # http://mike.teczno.com/notes/atkinson.html
+    #
+    
+    def apply_atkinson_dithering(self, img) :
+
+        img = img.convert('L')
+
+        threshold = 128*[0] + 128*[255]
+
+        for y in range(img.size[1]):
+            for x in range(img.size[0]):
+
+                old = img.getpixel((x, y))
+                new = threshold[old]
+                err = (old - new) >> 3 # divide by 8
+            
+                img.putpixel((x, y), new)
+        
+                for nxy in [(x+1, y), (x+2, y), (x-1, y+1), (x, y+1), (x+1, y+1), (x, y+2)]:
+                    try:
+                        img.putpixel(nxy, img.getpixel(nxy) + err)
+                    except IndexError:
+                        pass
+
+        return img.convert('RGBA')
+    
+    # ##########################################################
     
     def add_marker(self, img, args) :
 
@@ -236,6 +281,7 @@ RU5ErkJggg=="""
             args['width'] = 75
             args['provider'] = args['marker']
             args['marker'] = ''
+            args['dither'] = 0            
             thumb = self.draw_map(args)
 
         #
@@ -358,6 +404,13 @@ RU5ErkJggg=="""
             params['marker'] = ['']
 
         #
+
+        if params.has_key('dither') and int(params['dither'][0]) :
+            params['dither'] = 1
+        else :
+            params['dither'] = 0
+
+        #
         
         return {
             'provider'  : params['provider'][0].upper(),
@@ -367,6 +420,7 @@ RU5ErkJggg=="""
             'height'    : int(params['height'][0]),
             'width'     : int(params['width'][0]),
             'marker'    : params['marker'][0],
+            'dither'    : params['dither'],
             }
 
     # ##########################################################
