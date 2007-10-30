@@ -17,7 +17,7 @@ import Google, Yahoo, Microsoft
 
 def calculateMapCenter(provider, centerCoord):
     """ Based on a center coordinate, returns the coordinate
-        of an initial tile and it's point placement, relative to
+        of an initial tile and its point placement, relative to
         the map center.
     """
 
@@ -208,19 +208,20 @@ class Map:
     def draw(self, verbose=False):
         """ Draw map out to a PIL.Image and return it.
         """
+        coord = self.coordinate.copy()
         corner = Core.Point(int(self.offset.x + self.dimensions.x/2), int(self.offset.y + self.dimensions.y/2))
         
         while corner.x > 0:
             corner.x -= self.provider.tileWidth()
-            self.coordinate = self.coordinate.left()
+            coord = coord.left()
         
         while corner.y > 0:
             corner.y -= self.provider.tileHeight()
-            self.coordinate = self.coordinate.up()
+            coord = coord.up()
             
         tiles = TileQueue()
         
-        rowCoord = self.coordinate.copy()
+        rowCoord = coord.copy()
         for y in range(corner.y, self.dimensions.y, self.provider.tileHeight()):
             tileCoord = rowCoord.copy()
             for x in range(corner.x, self.dimensions.x, self.provider.tileWidth()):
