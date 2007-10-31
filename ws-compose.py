@@ -15,6 +15,7 @@ import BaseHTTPServer, SocketServer, mimetypes
 import re
 import tempfile
 import textwrap
+import string
 import base64
 import Image
 
@@ -77,7 +78,22 @@ class WebRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     # ##########################################################
 
     def draw_map_extentified (self, args) :
-        self.error(999, "I'm sorry, Dave. Ican't let you do that.")
+
+        provider = self.load_provider(args['provider'])
+        
+        coord, offset = ModestMaps.calculateMapExtent(provider,
+                                                      args['width'], args['height'],
+                                                      ModestMaps.Geo.Location(args['bbox'][0], args['bbox'][1]),
+                                                      ModestMaps.Geo.Location(args['bbox'][2], args['bbox'][3]))
+
+        dim = ModestMaps.Core.Point(args['width'], args['height'])
+        map = ModestMaps.Map(provider, dim, coord, offset)            
+        img = map.draw()
+
+        if args.has_key('filter') :
+            img = self.apply_filtering(img, args['filter'])
+
+        return img
     
     # ##########################################################
     
@@ -98,10 +114,10 @@ class WebRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         map = ModestMaps.Map(provider, dim, coord, offset)            
         img = map.draw()
 
-        if args['dither'] :
-            img = self.apply_atkinson_dithering(img)
-            
-        if args['marker'] :
+        if args.has_key('filter') :
+            img = self.apply_filtering(img, args['filter'])
+
+        if args.has_key('marker') :            
             self.add_marker(img, args)
                 
         return img
@@ -236,6 +252,12 @@ RU5ErkJggg=="""
 
     # ##########################################################
 
+    def apply_filtering (self, img, filter) :
+
+        return self.apply_atkinson_dithering(img)
+    
+    # ##########################################################
+    
     #
     # http://mike.teczno.com/notes/atkinson.html
     #
@@ -305,6 +327,8 @@ RU5ErkJggg=="""
         self.send_response(200, "OK")
         self.send_header("Content-Type", "image/png")
         self.send_header("Content-Length", fh.len)         
+        self.send_header("X-ImageHeight", img.size[1])
+        self.send_header("X-ImageWidth", img.size[0])        
         self.end_headers()
 
         self.wfile.write(fh.getvalue())
@@ -356,24 +380,65 @@ RU5ErkJggg=="""
             return False
 
         #
+
+        valid = {}
         
         re_coord    = re.compile(r"^-?\d+(?:\.\d+)?$")
         re_num      = re.compile(r"^\d+$")
         re_provider = re.compile(r"^(GOOGLE|YAHOO|MICROSOFT)_(ROAD|HYBRID|AERIAL)$")
 
-        for p in ('latitude', 'longitude') :
+        #
+        # where am i?
+        # 
+        
+        if params.has_key('bbox') :
 
-            if not params.has_key(p) :
-                self.error(101, "Missing %s parameter" % p)
+            bbox = params['bbox'][0].split(",")
+
+            if len(bbox) != 4 :
+                self.error(101, "Missing or incomplete %s parameter" % 'bbox')
                 return False
+
+            bbox = map(string.strip, bbox)
             
-            if not re_coord.match(params[p][0]) :
-                self.error(102, "Not a valid lat/long : %s" % p)
+            for pt in bbox :
+                if not re_coord.match(pt) :
+                    self.error(102, "Not a valid lat/long : %s" % pt)
+                    return False
+
+            valid['bbox'] = map(float, bbox)
+            
+        else :
+        
+            for p in ('latitude', 'longitude') :
+
+                if not params.has_key(p) :
+                    self.error(101, "Missing %s parameter" % p)
+                    return False
+            
+                if not re_coord.match(params[p][0]) :
+                    self.error(102, "Not a valid lat/long : %s" % p)
+                    return False
+
+                valid[p] = float(params[p][0])
+
+            #
+            
+            if not params.has_key('accuracy') :
+                self.error(101, "Missing %s parameter" % 'accuracy')
                 return False
+
+            if not re_num.match(params['accuracy'][0]) :
+                self.error(102, "Not a valid number %s" % 'accuracy')
+                return False
+
+            valid['zoom'] = float(params['accuracy'][0])            
             
         #
-
-        for p in ('height', 'width', 'accuracy') :
+        # dimensions
+        #
+        
+        for p in ('height', 'width') :
 
             if not params.has_key(p) :
                 self.error(101, "Missing %s parameter" % p)
@@ -382,17 +447,25 @@ RU5ErkJggg=="""
             if not re_num.match(params[p][0]) :
                 self.error(102, "Not a valid number %s" % p)
                 return False
+
+            valid[p] = int(params[p][0])
             
         #
-
+        # map provider
+        #
+        
         if not params.has_key('provider') :
             self.error(101, "Missing %s parameter" % p)
             return False
-
+        
         if not re_provider.match(params['provider'][0].upper()) :
             self.error(102, "Not a valid provider")
             return False
 
+        valid['provider'] = params['provider'][0].upper()
+        
+        #
+        # markers?
         #
         
         if params.has_key('marker') :
@@ -400,28 +473,20 @@ RU5ErkJggg=="""
                 self.error(102, "Not a valid marker provider")
                 return False
 
-        else :
-            params['marker'] = ['']
-
+            valid['marker'] = params['marker'][0]
+        
+        #
+        # filters
         #
 
-        if params.has_key('dither') and int(params['dither'][0]) :
-            params['dither'] = 1
-        else :
-            params['dither'] = 0
+        if params.has_key('filter') and params['filter'][0]:
+            valid['filter'] = params['filter'][0]
 
+        #
+        # whoooosh
         #
         
-        return {
-            'provider'  : params['provider'][0].upper(),
-            'latitude'  : float(params['latitude'][0]),
-            'longitude' : float(params['longitude'][0]),
-            'zoom'      : float(params['accuracy'][0]),            
-            'height'    : int(params['height'][0]),
-            'width'     : int(params['width'][0]),
-            'marker'    : params['marker'][0],
-            'dither'    : params['dither'],
-            }
+        return valid
 
     # ##########################################################
 
