@@ -53,12 +53,12 @@ class WebRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if not args :
             return
 
-        img = self.draw_map(args)
+        img, meta = self.draw_map(args)
 
         if not img :
             return
 
-        self.send_map(img)
+        self.send_map(img, meta)
         return
 
     # ##########################################################
@@ -88,12 +88,17 @@ class WebRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         dim = ModestMaps.Core.Point(args['width'], args['height'])
         map = ModestMaps.Map(provider, dim, coord, offset)            
-        img = map.draw()
 
+        img = map.draw()
+        meta = None
+        
         if args.has_key('filter') :
             img = self.apply_filtering(img, args['filter'])
 
-        return img
+        if args.has_key('markers') :
+            meta = self.add_markers(map, img, args)
+
+        return (img, meta)
     
     # ##########################################################
     
@@ -112,15 +117,17 @@ class WebRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         dim = ModestMaps.Core.Point(args['width'], args['height'])
         
         map = ModestMaps.Map(provider, dim, coord, offset)            
-        img = map.draw()
 
+        img = map.draw()
+        meta = None
+        
         if args.has_key('filter') :
             img = self.apply_filtering(img, args['filter'])
 
         if args.has_key('marker') :            
             self.add_marker(img, args)
                 
-        return img
+        return (img, meta)
             
     # ##########################################################
 
@@ -239,7 +246,7 @@ RU5ErkJggg=="""
 
     # ##########################################################
     
-    def get_marker (self) :
+    def get_marker (self, args) :
 
         # sort of pointless in a CGI-context
         # but think of the ponies...
@@ -316,8 +323,78 @@ RU5ErkJggg=="""
         img.paste(marker, (x, y), marker)
     
     # ##########################################################
+
+    def add_markers (self, mmap, img, args) :
+
+        # note the mmap-iness of the 'map' object
+        # apparently python is too stupid not to
+        # confuse it with its own 'map' function...
+        
+        coords = {}
+        
+        for details in args['markers'] :
+            res = self.add_marker2(mmap, img, details)
+
+            label = "Marker-%s" % details['label']
+                
+            if res :
+                coords[label] = ",".join(map(str, res))
+            else :
+                coords[label] = "FAIL"
+                
+        return coords
+            
+    # ##########################################################
     
-    def send_map (self, img) :
+    def add_marker2(self, map, img, args) :
+
+        try : 
+            loc = ModestMaps.Geo.Location(args['latitude'], args['longitude'])
+            pt = map.locationPoint(loc)
+        except Exception, e :
+            print "OH NOES %s" % e
+            return False
+        
+        marker = self.get_marker(args)
+
+        if args.has_key('fill') :
+            marker = self.fill_marker(img, marker, args)
+
+        x = int(pt.x)
+        y = int(pt.y)
+        
+        mx = x - 28
+        my = y - 134
+
+        img.paste(marker, (mx, my), marker)
+        return (x, y, mx, my)
+    
+    # ##########################################################
+
+    def fill_marker(self, img, marker, args) :
+
+        if args['provider'] == args['marker'] :
+            offset = 75 / 2
+            nw = (x / 2) - offset
+            se = (y / 2) + offset
+            thumb = img.crop((nw, nw, se, se))
+            
+        else :
+            args['height'] = 75
+            args['width'] = 75
+            args['provider'] = args['marker']
+            args['marker'] = ''
+            args['dither'] = 0            
+            thumb = self.draw_map(args)
+
+        #
+        
+        marker.paste(thumb, (11, 10))
+        return marker
+    
+    # ##########################################################
+    
+    def send_map (self, img, meta) :
 
         # Oh PIL, why don't you have a 'tostringDWIM' method?
 
@@ -327,8 +404,14 @@ RU5ErkJggg=="""
         self.send_response(200, "OK")
         self.send_header("Content-Type", "image/png")
         self.send_header("Content-Length", fh.len)         
-        self.send_header("X-ImageHeight", img.size[1])
-        self.send_header("X-ImageWidth", img.size[0])        
+        self.send_header("X-Image-Height", img.size[1])
+        self.send_header("X-Image-Width", img.size[0])        
+
+        if meta :
+            for item in meta.keys() :
+                header = "X-%s" % item
+                self.send_header(header, meta[item])
+                                 
         self.end_headers()
 
         self.wfile.write(fh.getvalue())
@@ -380,15 +463,22 @@ RU5ErkJggg=="""
             return False
 
         #
-
+        # I am a blank canvas
+        #
+        
         valid = {}
+
+        #
+        # Seeking love and affection...
+        #
         
         re_coord    = re.compile(r"^-?\d+(?:\.\d+)?$")
         re_num      = re.compile(r"^\d+$")
+        re_label    = re.compile(r"^(?:[a-z0-9-_]+)$")
         re_provider = re.compile(r"^(GOOGLE|YAHOO|MICROSOFT)_(ROAD|HYBRID|AERIAL)$")
-
+        
         #
-        # where am i?
+        # Where am i?
         # 
         
         if params.has_key('bbox') :
@@ -474,6 +564,53 @@ RU5ErkJggg=="""
                 return False
 
             valid['marker'] = params['marker'][0]
+
+        #
+        # markers? (the new new)
+        #
+        
+        if params.has_key('markers') :
+
+            valid['markers'] = []
+            
+            for pos in params['markers'] :
+
+                marker_data = {}
+                
+                details = pos.split(",")
+                details = map(string.strip, details)
+
+                if len(details) < 3 :
+                    self.error(101, "Missing or incomplete %s parameter : %s" % ('marker', pos))
+                    return False
+
+                if not re_label.match(details[0]) :
+                    self.error(102, "Not a valid marker label : %s" % pos)
+                    return False
+
+                marker_data['label'] = unicode(details[0])
+                
+                if not re_coord.match(details[1]) :
+                    self.error(102, "Not a valid lat/long : %s" % pos)
+                    return False
+
+                marker_data['latitude'] = float(details[1])
+                
+                if not re_coord.match(details[2]) :
+                    self.error(102, "Not a valid lat/long : %s" % pos)
+                    return False
+
+                marker_data['longitude'] = float(details[2])
+                
+                if len(details) > 3 :
+                    
+                    if not re_provider.match(details[3].upper()) :
+                        self.error(102, "Not a valid marker provider")
+                        return False
+
+                    marker_data['fill'] = unicode(details[3])
+                
+                valid['markers'].append(marker_data)
         
         #
         # filters
@@ -485,7 +622,8 @@ RU5ErkJggg=="""
         #
         # whoooosh
         #
-        
+
+        # print valid
         return valid
 
     # ##########################################################
