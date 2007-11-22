@@ -72,6 +72,9 @@ def parseExtent(option, opt, values, parser):
 
 parser = optparse.OptionParser(usage="""compose.py [options]
 
+Example map of San Francisco and Oakland:
+    python compose.py -o out.png -p MICROSOFT_ROAD -d 800 800 -c 37.8 -122.3 11
+
 Map provider and output image dimensions MUST be specified before extent
 or center/zoom. Multiple extents and center/zooms may be specified, but
 only the last will be used.""")
