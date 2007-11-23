@@ -95,8 +95,8 @@ class WebRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if args.has_key('filter') :
             img = self.apply_filtering(img, args['filter'])
 
-        if args.has_key('markers') :
-            meta = self.add_markers(map, img, args)
+        #if args.has_key('markers') :
+        #    meta = self.add_markers(map, img, args)
 
         return (img, meta)
     
@@ -124,8 +124,8 @@ class WebRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if args.has_key('filter') :
             img = self.apply_filtering(img, args['filter'])
 
-        if args.has_key('marker') :            
-            self.add_marker(img, args)
+        #if args.has_key('marker') :            
+        #    self.add_marker(img, args)
                 
         return (img, meta)
             
@@ -558,59 +558,59 @@ RU5ErkJggg=="""
         # markers?
         #
         
-        if params.has_key('marker') :
-            if not re_provider.match(params['marker'][0].upper()) :
-                self.error(102, "Not a valid marker provider")
-                return False
-
-            valid['marker'] = params['marker'][0]
+        #if params.has_key('marker') :
+        #    if not re_provider.match(params['marker'][0].upper()) :
+        #        self.error(102, "Not a valid marker provider")
+        #        return False
+        #
+        #    valid['marker'] = params['marker'][0]
 
         #
         # markers? (the new new)
         #
         
-        if params.has_key('markers') :
-
-            valid['markers'] = []
-            
-            for pos in params['markers'] :
-
-                marker_data = {}
-                
-                details = pos.split(",")
-                details = map(string.strip, details)
-
-                if len(details) < 3 :
-                    self.error(101, "Missing or incomplete %s parameter : %s" % ('marker', pos))
-                    return False
-
-                if not re_label.match(details[0]) :
-                    self.error(102, "Not a valid marker label : %s" % pos)
-                    return False
-
-                marker_data['label'] = unicode(details[0])
-                
-                if not re_coord.match(details[1]) :
-                    self.error(102, "Not a valid lat/long : %s" % pos)
-                    return False
-
-                marker_data['latitude'] = float(details[1])
-                
-                if not re_coord.match(details[2]) :
-                    self.error(102, "Not a valid lat/long : %s" % pos)
-                    return False
-
-                marker_data['longitude'] = float(details[2])
-                
-                if len(details) > 3 :
-                    
-                    if not re_provider.match(details[3].upper()) :
-                        self.error(102, "Not a valid marker provider")
-                        return False
-
-                    marker_data['fill'] = unicode(details[3])
-                
-                valid['markers'].append(marker_data)
+        #if params.has_key('markers') :
+        #
+        #    valid['markers'] = []
+        #    
+        #    for pos in params['markers'] :
+        #
+        #        marker_data = {}
+        #        
+        #        details = pos.split(",")
+        #        details = map(string.strip, details)
+        #
+        #        if len(details) < 3 :
+        #            self.error(101, "Missing or incomplete %s parameter : %s" % ('marker', pos))
+        #            return False
+        #
+        #        if not re_label.match(details[0]) :
+        #            self.error(102, "Not a valid marker label : %s" % pos)
+        #            return False
+        #
+        #        marker_data['label'] = unicode(details[0])
+        #        
+        #        if not re_coord.match(details[1]) :
+        #            self.error(102, "Not a valid lat/long : %s" % pos)
+        #            return False
+        #
+        #        marker_data['latitude'] = float(details[1])
+        #        
+        #        if not re_coord.match(details[2]) :
+        #            self.error(102, "Not a valid lat/long : %s" % pos)
+        #            return False
+        #
+        #        marker_data['longitude'] = float(details[2])
+        #        
+        #        if len(details) > 3 :
+        #            
+        #            if not re_provider.match(details[3].upper()) :
+        #                self.error(102, "Not a valid marker provider")
+        #                return False
+        #
+        #            marker_data['fill'] = unicode(details[3])
+        #        
+        #        valid['markers'].append(marker_data)
         
         #
         # filters
@@ -637,12 +637,13 @@ RU5ErkJggg=="""
         self.wfile.write("ws-compose.py - a bare bone HTTP interface to the ModestMaps map tile composer.\n\n")
 
         self.help_header("Example")
-        self.help_para("http://127.0.0.1:9999/?provider=GOOGLE_ROAD&marker=YAHOO_AERIAL&latitude=41.904688&longitude=12.494308&accuracy=17&height=500&width=500")
+        #self.help_para("http://127.0.0.1:9999/?provider=GOOGLE_ROAD&marker=YAHOO_AERIAL&latitude=41.904688&longitude=12.494308&accuracy=17&height=500&width=500")
+        self.help_para("http://127.0.0.1:9999/?provider=GOOGLE_ROAD&latitude=41.904688&longitude=12.494308&accuracy=17&height=500&width=500")
         self.help_para("Returns a PNG file of a map centered on the Santa Maria della Vittoria, in Rome.")
         
         self.help_header("Parameters")
         self.help_option('provider', 'A valid ModestMaps map tile provider.', True)
-        self.help_option('marker', 'A valid ModestMaps map tile provider. Used to overlay a "pinwin" marker over the chosen lat/lon point', False)
+        #self.help_option('marker', 'A valid ModestMaps map tile provider. Used to overlay a "pinwin" marker over the chosen lat/lon point', False)
         self.help_option('latitude','A valid decimal latitude.', True)
         self.help_option('longitude', 'A valid decimal longitude.', True)
         self.help_option('accuracy', 'The zoom level / accuracy (as defined by ModestMaps rather than any individual tile provider) of the final image.', True)
