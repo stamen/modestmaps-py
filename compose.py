@@ -35,6 +35,9 @@ def parseProvider(option, opt, value, parser):
     elif value == 'GOOGLE_HYBRID':
         parser.provider = ModestMaps.Google.HybridProvider()
         
+    elif value == 'GOOGLE_TERRAIN':
+        parser.provider = ModestMaps.Google.TerrainProvider()
+        
     elif value == 'YAHOO_ROAD':
         parser.provider = ModestMaps.Yahoo.RoadProvider()
         
@@ -95,7 +98,7 @@ parser.add_option('-e', '--extent', dest='extent', nargs=4,
                   action='callback', callback=parseExtent)
 
 parser.add_option('-p', '--provider', dest='provider',
-                  type='string', help='Map Provider, one of: MICROSOFT_ROAD, MICROSOFT_AERIAL, MICROSOFT_HYBRID, GOOGLE_ROAD, GOOGLE_AERIAL, GOOGLE_HYBRID, YAHOO_ROAD, YAHOO_AERIAL, YAHOO_HYBRID',
+                  type='string', help='Map Provider, one of: MICROSOFT_ROAD, MICROSOFT_AERIAL, MICROSOFT_HYBRID, GOOGLE_ROAD, GOOGLE_AERIAL, GOOGLE_HYBRID, GOOGLE_TERRAIN, YAHOO_ROAD, YAHOO_AERIAL, YAHOO_HYBRID',
                   action='callback', callback=parseProvider)
 
 parser.add_option('-d', '--dimensions', dest='dimensions', nargs=2,

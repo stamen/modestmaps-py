@@ -27,6 +27,7 @@ import random, Tiles
 ROAD_VERSION = 'w2.63'
 AERIAL_VERSION = '23'
 HYBRID_VERSION = 'w2t.63'
+TERRAIN_VERSION = 'w2p.62'
 
 class AbstractProvider(IMapProvider):
     def __init__(self):
@@ -63,6 +64,10 @@ class HybridProvider(AbstractProvider):
         under = AerialProvider().getTileUrls(coordinate)[0]
         over = 'http://mt%d.google.com/mt?n=404&v=%s&%s' % (random.randint(0, 3), HYBRID_VERSION, RoadProvider().getZoomString(self.sourceCoordinate(coordinate)))
         return (under, over)
+
+class TerrainProvider(RoadProvider):
+    def getTileUrls(self, coordinate):
+        return ('http://mt%d.google.com/mt?n=404&v=%s&%s' % (random.randint(0, 3), TERRAIN_VERSION, self.getZoomString(self.sourceCoordinate(coordinate))),)
 
 if __name__ == '__main__':
     import doctest
