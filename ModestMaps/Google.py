@@ -24,10 +24,10 @@ from Providers import IMapProvider
 
 import random, Tiles
 
-ROAD_VERSION = 'w2.63'
-AERIAL_VERSION = '23'
-HYBRID_VERSION = 'w2t.63'
-TERRAIN_VERSION = 'w2p.62'
+ROAD_VERSION = 'w2.66'
+AERIAL_VERSION = '24'
+HYBRID_VERSION = 'w2t.66'
+TERRAIN_VERSION = 'w2p.64'
 
 class AbstractProvider(IMapProvider):
     def __init__(self):
