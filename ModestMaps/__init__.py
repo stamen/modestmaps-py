@@ -14,6 +14,7 @@ import Providers
 import Core
 import Geo
 import Google, Yahoo, Microsoft
+import time
 
 def calculateMapCenter(provider, centerCoord):
     """ Based on a center coordinate, returns the coordinate
@@ -106,13 +107,14 @@ class TileRequest:
         # this is the time-consuming part
         try:
             imgs = [PIL.Image.open(StringIO.StringIO(urllib.urlopen(url).read())).convert('RGBA')
-                    for url in urls]
-
+                    for url in urls]                
         except:
+                
             if verbose:
                 print 'Failed', urls, '- attempt no.', attempt, 'in thread', thread.get_ident()
 
             if attempt < TileRequest.MAX_ATTEMPTS:
+                time.sleep(1 * attempt)
                 return self.load(lock, verbose, attempt+1)
             else:
                 imgs = [None for url in urls]
@@ -205,12 +207,82 @@ class Map:
         
         return location
 
+    #
+    
+    def draw_bbox(self, bbox, zoom=16, verbose=False) :
+
+        sw = Geo.Location(bbox[0], bbox[1])
+        ne = Geo.Location(bbox[2], bbox[3])
+        nw = Geo.Location(ne.lat, sw.lon)
+        se = Geo.Location(sw.lat, ne.lon)
+        
+        TL = self.provider.locationCoordinate(nw).zoomTo(zoom)
+
+        #
+
+        tiles = TileQueue()
+
+        cur_lon = sw.lon
+        cur_lat = ne.lat        
+        max_lon = ne.lon
+        max_lat = sw.lat
+        
+        x_off = 0
+        y_off = 0
+        tile_x = 0
+        tile_y = 0
+        
+        tileCoord = TL.copy()
+
+        while cur_lon < max_lon :
+
+            y_off = 0
+            tile_y = 0
+            
+            while cur_lat > max_lat :
+                
+                tiles.append(TileRequest(self.provider, tileCoord, Core.Point(x_off, y_off)))
+                y_off += self.provider.tileHeight()
+                
+                tileCoord = tileCoord.down()
+                loc = self.provider.coordinateLocation(tileCoord)
+                cur_lat = loc.lat
+
+                tile_y += 1
+                
+            x_off += self.provider.tileWidth()            
+            cur_lat = ne.lat
+            
+            tile_x += 1
+            tileCoord = TL.copy().right(tile_x)
+
+            loc = self.provider.coordinateLocation(tileCoord)
+            cur_lon = loc.lon
+
+        width = int(self.provider.tileWidth() * tile_x)
+        height = int(self.provider.tileHeight() * tile_y)
+
+        # Quick, look over there!
+
+        coord, offset = calculateMapExtent(self.provider,
+                                           width, height,
+                                           Geo.Location(bbox[0], bbox[1]),
+                                           Geo.Location(bbox[2], bbox[3]))
+
+        self.offset = offset
+        self.coordinates = coord
+        self.dimensions = Core.Point(width, height)
+
+        return self.draw()
+    
+    #
+    
     def draw(self, verbose=False):
         """ Draw map out to a PIL.Image and return it.
         """
         coord = self.coordinate.copy()
         corner = Core.Point(int(self.offset.x + self.dimensions.x/2), int(self.offset.y + self.dimensions.y/2))
-        
+
         while corner.x > 0:
             corner.x -= self.provider.tileWidth()
             coord = coord.left()
@@ -218,7 +290,7 @@ class Map:
         while corner.y > 0:
             corner.y -= self.provider.tileHeight()
             coord = coord.up()
-            
+        
         tiles = TileQueue()
         
         rowCoord = coord.copy()
@@ -228,9 +300,15 @@ class Map:
                 tiles.append(TileRequest(self.provider, tileCoord, Core.Point(x, y)))
                 tileCoord = tileCoord.right()
             rowCoord = rowCoord.down()
+
+        return self.render_tiles(tiles, self.dimensions.x, self.dimensions.y)
+
+    #
+    
+    def render_tiles (self, tiles, img_width, img_height, verbose=False) :
         
         lock = thread.allocate_lock()
-    
+        
         for tile in tiles:
             # request all needed images
             thread.start_new_thread(tile.load, (lock, verbose))
@@ -242,7 +320,7 @@ class Map:
             # hang around until they are loaded or we run out of time...
             time.sleep(1)
     
-        mapImg = PIL.Image.new('RGB', (self.dimensions.x, self.dimensions.y))
+        mapImg = PIL.Image.new('RGB', (img_width, img_height))
         
         for tile in tiles:
             try:
@@ -251,7 +329,7 @@ class Map:
             except:
                 # something failed to paste, so we ignore it
                 pass
-        
+
         return mapImg
 
 if __name__ == '__main__':
