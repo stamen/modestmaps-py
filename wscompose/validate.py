@@ -5,7 +5,7 @@ __version__    = "1.0"
 __author__     = "Aaron Straup Cope"
 __url__        = "http://www.aaronland.info/python/wscompose"
 __date__       = "$Date: 2008/01/04 06:23:46 $"
-__copyright__  = "Copyright (c) 2007-2008 Aaron Straup Cope. Perl Artistic License."
+__copyright__  = "Copyright (c) 2007-2008 Aaron Straup Cope. BSD license : http://www.modestmaps.com/license."
 
 import re
 import string

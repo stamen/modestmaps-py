@@ -5,7 +5,7 @@ __version__    = "1.0"
 __author__     = "Aaron Straup Cope"
 __url__        = "http://www.aaronland.info/python/wscompose"
 __date__       = "$Date: 2008/01/04 06:23:46 $"
-__copyright__  = "Copyright (c) 2007-2008 Aaron Straup Cope. Perl Artistic License."
+__copyright__  = "Copyright (c) 2007-2008 Aaron Straup Cope. BSD license : http://www.modestmaps.com/license.txt"
 
 import signal, thread, threading, time, sys
 import BaseHTTPServer, SocketServer, mimetypes
@@ -448,7 +448,7 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
     
     def help_example (self) :
         self.help_header("Example")
-        self.help_para("http://127.0.0.1:9999/?provider=GOOGLE_ROAD&marker=YAHOO_AERIAL&latitude=41.904688&longitude=12.494308&zoom=17&height=500&width=500")
+        self.help_para("http://127.0.0.1:9999/?provider=GOOGLE_ROAD&latitude=41.904688&longitude=12.494308&zoom=17&height=500&width=500")
         self.help_para("Returns a PNG file of a map centered on the Santa Maria della Vittoria, in Rome.")
         
     # ##########################################################
@@ -516,7 +516,7 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
     
     def help_license (self) :
         self.help_header("License")
-        self.help_para("Copyright (c) 2007-2008 Aaron Straup Cope. All Rights Reserved. This is free software. You may redistribute it and/or modify it under the same terms the Perl Artistic License.")
+        self.help_para("Copyright (c) 2007-2008 Aaron Straup Cope. All Rights Reserved. This is free software. You may redistribute it and/or modify it under the same terms the BSD license : http://www.modestmaps.com/license.txt")
         
     # ##########################################################
     
