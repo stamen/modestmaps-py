@@ -1,7 +1,7 @@
 # -*-python-*-
 
 __package__    = "wscompose/__init__.py"
-__version__    = "1.0"
+__version__    = "1.1"
 __author__     = "Aaron Straup Cope"
 __url__        = "http://www.aaronland.info/python/wscompose"
 __date__       = "$Date: 2008/01/04 06:23:46 $"
@@ -33,6 +33,7 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
     
     def __init__ (self, request, client_address, server) :
         self.ctx = {}
+        self.points = {}
         BaseHTTPServer.BaseHTTPRequestHandler.__init__(self, request, client_address, server)
         
     # ##########################################################
@@ -238,7 +239,30 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.send_header("X-wscompose-Image-Height", img.size[1])
         self.send_header("X-wscompose-Image-Width", img.size[0])        
         self.send_header("X-wscompose-Map-Zoom", self.ctx['zoom'])
+
+        if self.ctx.has_key('plot') :
+            for data in self.ctx['plot'] :
+
+                pt = self.latlon_to_point(data['latitude'], data['longitude'])
+
+                header = "X-wscompose-Plot-%s" % data['label']
+                coords = "%s,%s" % (int(pt.x), int(pt.y))
+
+                self.send_header(header, coords)
                 
+    # ##########################################################
+
+    def latlon_to_point (self, lat, lon) :
+
+        key = "%s-%s" % (lat, lon)
+
+        if not self.points.has_key(key) :
+            loc = ModestMaps.Geo.Location(lat, lon)
+            pt = self.ctx['map'].locationPoint(loc)
+            self.points[key] = pt
+
+        return self.points[key]
+    
     # ##########################################################
     
     def load_provider (self, value) :
@@ -409,6 +433,19 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
                     self.error(134, e)
                     return False
             
+
+        #
+        # plotting or "headless" markers
+        #
+
+        if params.has_key('plot') :
+
+            try :
+                valid['plot'] = validator.plots(params['plot'])
+            except Exception, e :
+                self.error(141, e)
+                return False
+        
         #
         # whoooosh
         #
@@ -473,6 +510,10 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.help_option('bbox', 'Render all the map tiles necessary to display a bounding box at a specific zoom level. If defined, the following parameters must also be present : ', False, 1)
         self.help_option('bbox', 'A bounding box comprised of comma-separated decimal coordinates in the following order : SW latitude, SW longitude, NE latitude, NE longitude', True, 2)
         self.help_option('accuracy', 'The zoom level / accuracy (as defined by ModestMaps rather than any individual tile provider) of the final image.', True, 2)
+
+        self.help_option('plot', 'Plot -- but do not render -- the x and y coordinates for a given point. Coordinate data will be returned HTTP header(s) named \'X-wscompose-plot-\' followed by the label you choose when passing latitude and longitude information. You may pass multiple plot arguments, each of which should contain the following comma separated values :', False)
+        self.help_option('label', 'A unique string to identify the plotting by', True, 1)
+        self.help_option('point', 'A comma-separated string containing the latitude and longitude indicating the point to be plotted', True, 1)
         
     # ##########################################################
 
@@ -489,7 +530,12 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
         Content-Length: 1946576
         X-wscompose-Image-Height: 1024
         X-wscompose-Image-Width: 1024
-        X-wscompose-Map-Zoom: 14.0""")
+        X-wscompose-Map-Zoom: 14.0
+        X-wscompose-plot-roy: 667,285""")
+
+        self.help_para("Most headers are self-explanatory. Markers, dots and plotting coordinates are a little more complicated.")
+
+        self.help_para("The string after 'X-wscompose-plot-' is the label assigned to the marker when the API call was made. The value is a comma separated list containing the x and y coordinates for (label's) corresponding latitude and longitude.")
         
     # ##########################################################    
 

@@ -1,7 +1,7 @@
 # -*-python-*-
 
 __package__    = "wscompose/pinwin.py"
-__version__    = "1.0"
+__version__    = "1.1"
 __author__     = "Aaron Straup Cope"
 __url__        = "http://www.aaronland.info/python/wscompose"
 __date__       = "$Date: 2008/01/04 06:23:46 $"
@@ -33,7 +33,14 @@ class handler (wscompose.plotting.handler, wscompose.dithering.handler) :
 
         if self.ctx.has_key('filter') and self.ctx['filter'] == 'atkinson' :
             img = self.atkinson_dithering(img)
-            
+
+        #
+        
+        if self.ctx.has_key('dots') :
+            img = self.draw_dots(img)
+
+        #
+        
         if self.ctx.has_key('markers') :
 
             self.reposition_markers()
@@ -43,6 +50,8 @@ class handler (wscompose.plotting.handler, wscompose.dithering.handler) :
             else :
                 img = self.draw_markers(img)            
 
+        #
+        
         return img
 
     # ##########################################################
@@ -70,6 +79,18 @@ class handler (wscompose.plotting.handler, wscompose.dithering.handler) :
                 sep = ","
                 
                 self.send_header(header, sep.join(details))
+
+        #
+        
+        if self.ctx.has_key('dots') :
+            for data in self.ctx['dots'] :
+
+                pt = self.latlon_to_point(data['latitude'], data['longitude'])
+
+                header = "X-wscompose-Dot-%s" % data['label']
+                coords = "%s,%s,%s" % (int(pt.x), int(pt.y), int(data['radius']))
+                
+                self.send_header(header, coords)
         
     # ##########################################################
 
@@ -234,6 +255,31 @@ class handler (wscompose.plotting.handler, wscompose.dithering.handler) :
         return True
     
     # ##########################################################
+
+    # share me with marker.py or add shapes.py (or something) ?
+    
+    def draw_dots (self, img) :
+
+        dr = ImageDraw.Draw(img)
+        pink = (255, 0, 132)
+        grey = (42, 42, 42)
+        
+        for data in self.ctx['dots'] :
+
+            pt = self.latlon_to_point(data['latitude'], data['longitude'])
+            offset = float(data['radius']) / 2
+
+            x1 = pt.x - offset
+            y1 = pt.y - offset
+            x2 = pt.x + offset
+            y2 = pt.y + offset
+
+            dr.ellipse((x1 + 1 , y1 + 2, x2 + 1, y2 + 2), fill=grey)
+            dr.ellipse((x1, y1, x2, y2), fill=pink)            
+
+        return img
+    
+    # ##########################################################
     
     def fetch_marker_fill (self, mrk_data) :
         
@@ -333,6 +379,16 @@ class handler (wscompose.plotting.handler, wscompose.dithering.handler) :
             valid['filter'] = params['filter'][0]
             
         #
+        # dots
+        #
+
+        if params.has_key('dot') :
+
+            try :
+                valid['dots'] = validator.dots(params['dot'])
+            except Exception, e :
+                self.error(141, e)
+                return False
         
         return valid
 
@@ -357,6 +413,15 @@ class handler (wscompose.plotting.handler, wscompose.dithering.handler) :
         self.help_option('label', 'A unique string to identify the marker by', True, 1)
         self.help_option('point', 'A comma-separated string containing the latitude and longitude indicating the point where the marker should be placed', True, 1)
         self.help_option('dimensions', 'A comma-separated string containing the height and width of the marker canvas - the default is 75 x 75', False, 1)   
+
+        self.help_option('dot', 'Draw a pinwin-style dot (but not the marker) at a given point. You may pass multiple dot arguments, each of which should contain the following comma separated values :', False)
+        self.help_option('label', 'A unique string to identify the dot by', True, 1)
+        self.help_option('point', 'A comma-separated string containing the latitude and longitude indicating the point where the dot should be placed', True, 1)
+        self.help_option('radius', 'The radius, in pixels, of the dot - the default is 18', False, 1)    
+
+        self.help_option('plot', 'Plot -- but do not render -- the x and y coordinates for a given point. Coordinate data will be returned HTTP header(s) named \'X-wscompose-plot-\' followed by the label you choose when passing latitude and longitude information. You may pass multiple plot arguments, each of which should contain the following comma separated values :', False)
+        self.help_option('label', 'A unique string to identify the plotting by', True, 1)
+        self.help_option('point', 'A comma-separated string containing the latitude and longitude indicating the point to be plotted', True, 1)
 
         self.help_option('fill', 'A helper argument which if present will cause each marker specified to be filled with the contents of map for the marker\'s coordinates at zoom level 15. The value should be a valid ModestMaps map tile provider.', False)
         
@@ -393,12 +458,15 @@ class handler (wscompose.plotting.handler, wscompose.dithering.handler) :
         X-wscompose-Marker-roy: 667,285,629,165,75,75
         X-wscompose-Marker-cherrier: 679,312,641,192,75,75""")
 
-        self.help_para("Most headers are self-explanatory. Markers are a little more complicated.")
+        self.help_para("Most headers are self-explanatory. Markers, dots and plotting coordinates are a little more complicated.")
 
-        self.help_para("The string after 'X-wscompose-Marker-' is the label assigned to the marker when the API call was made. The value is a comma separated list interpreted as follows :")
+        self.help_para("The string after 'X-wscompose-darker-' is the label assigned to the marker when the API call was made. The value is a comma separated list interpreted as follows :")
 
         self.help_para("The first two numbers are the x/y coordinates for the lat/lon.")
         self.help_para("The second two are the x/y coordinates of the top left corner where the actual pinwin content should be pasted.")
         self.help_para("The last pair  are the dimensions of the pinwin content which is sort of redundant unless you are opting for defaults and don't know what to expect.")
 
+        self.help_para("'X-wscompose-dot-' headers return x and y coordinates followed by the dot's radius, in pixels")
+        self.help_para("'X-wscompose-plot-' headers return only x and y coordinates")
+        
     # ##########################################################

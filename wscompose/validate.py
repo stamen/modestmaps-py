@@ -1,7 +1,7 @@
 # -*-python-*-
 
 __package__    = "wscompose/validate.py"
-__version__    = "1.0"
+__version__    = "1.1"
 __author__     = "Aaron Straup Cope"
 __url__        = "http://www.aaronland.info/python/wscompose"
 __date__       = "$Date: 2008/01/04 06:23:46 $"
@@ -86,6 +86,11 @@ class validate :
     # ##########################################################
 
     def dimension (self, input) :
+        return self.__num(input)
+
+    # ##########################################################
+
+    def radius (self, input) :
         return self.__num(input)
 
     # ##########################################################
@@ -208,7 +213,103 @@ class validate :
             valid.append(marker_data)
 
         return valid
-    
+
+    # ##########################################################
+
+    def plots (self, plots) :
+
+        valid = []
+
+        for pos in plots :
+
+            details = pos.split(",")
+            details = map(string.strip, details)
+            
+            if len(details) < 3 :
+                raise Exception, "Missing or incomplete %s parameter : %s" % ('plot', pos)
+
+            data = {}
+            
+            try :
+                data['label'] = self.marker_label(details[0])
+            except Exception, e :
+                raise Exception, e
+
+            # Pinwin location
+            
+            try :
+                data['latitude'] = self.latlon(details[1])
+            except Exception, e :
+                raise Exception, e
+
+            try :
+                data['longitude'] = self.latlon(details[2])
+            except Exception, e :
+                raise Exception, e
+
+            valid.append(data)
+
+        return valid
+            
+    # ##########################################################
+
+    def dots (self, dots) :
+
+        valid = []
+
+        for pos in dots :
+
+            details = pos.split(",")
+            details = map(string.strip, details)
+            cnt = len(details)
+            
+            if cnt < 3 :
+                raise Exception, "Missing or incomplete %s parameter : %s" % ('dot', pos)
+
+            data = {}
+            
+            try :
+                data['label'] = self.marker_label(details[0])
+            except Exception, e :
+                raise Exception, e
+
+            # Pinwin location
+            
+            try :
+                data['latitude'] = self.latlon(details[1])
+            except Exception, e :
+                raise Exception, e
+
+            try :
+                data['longitude'] = self.latlon(details[2])
+            except Exception, e :
+                raise Exception, e
+
+            #
+            
+            if cnt > 3 :
+                try :
+                    data['radius'] = self.radius(details[3])
+                except Exception, e :
+                    raise Exception, e
+
+            else :
+                data['radius'] = 18
+
+            #
+            
+            if cnt > 4 :
+                #  fix me
+                pass
+            else :
+                data['colour'] = 'red'
+
+            #
+
+            valid.append(data)
+
+        return valid
+            
     # ##########################################################
     
     def __num (self, input) :

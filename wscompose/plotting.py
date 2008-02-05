@@ -74,9 +74,11 @@ class handler (wscompose.handler) :
             a = mrk_data['adjust_cone_height']
             
             mrk = self.load_marker(w, h, a)
+
+            pt = self.latlon_to_point(mrk_data['latitude'], mrk_data['longitude'])
             
-            loc = ModestMaps.Geo.Location(mrk_data['latitude'], mrk_data['longitude'])
-            pt = self.ctx['map'].locationPoint(loc)            
+            # loc = ModestMaps.Geo.Location(mrk_data['latitude'], mrk_data['longitude'])
+            # pt = self.ctx['map'].locationPoint(loc)            
             
             # argh...fix me!
 
