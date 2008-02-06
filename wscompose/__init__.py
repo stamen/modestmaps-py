@@ -299,6 +299,9 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
         elif value == 'BLUE_MARBLE':
             return ModestMaps.BlueMarble.Provider()
         
+        elif value == 'OPEN_STREET_MAP':
+            return ModestMaps.OpenStreetMap.Provider()
+
         else :
             return None
             

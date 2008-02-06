@@ -50,6 +50,9 @@ def parseProvider(option, opt, value, parser):
     elif value == 'BLUE_MARBLE':
         parser.provider = ModestMaps.BlueMarble.Provider()
         
+    elif value == 'OPEN_STREET_MAP':
+        parser.provider = ModestMaps.OpenStreetMap.Provider()
+        
     else:
         raise optparse.OptionValueError('Provider must be in eligible list (got: "%s")' % value)
 
