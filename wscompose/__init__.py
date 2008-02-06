@@ -296,6 +296,9 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
         elif value == 'YAHOO_HYBRID':
             return ModestMaps.Yahoo.HybridProvider()
         
+        elif value == 'BLUE_MARBLE':
+            return ModestMaps.BlueMarble.Provider()
+        
         else :
             return None
             

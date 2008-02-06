@@ -13,7 +13,7 @@ import Tiles
 import Providers
 import Core
 import Geo
-import Google, Yahoo, Microsoft
+import Google, Yahoo, Microsoft, BlueMarble
 import time
 
 def calculateMapCenter(provider, centerCoord):

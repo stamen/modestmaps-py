@@ -47,6 +47,9 @@ def parseProvider(option, opt, value, parser):
     elif value == 'YAHOO_HYBRID':
         parser.provider = ModestMaps.Yahoo.HybridProvider()
         
+    elif value == 'BLUE_MARBLE':
+        parser.provider = ModestMaps.BlueMarble.Provider()
+        
     else:
         raise optparse.OptionValueError('Provider must be in eligible list (got: "%s")' % value)
 
