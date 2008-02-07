@@ -19,7 +19,7 @@ class validate :
             'coord' : re.compile(r"^-?\d+(?:\.\d+)?$"),
             'adjust' : re.compile(r"^(\d+(?:\.\d*)?|\d*?\.\d+)$"),
             'num' : re.compile(r"^\d+$"),
-            'provider' : re.compile(r"^(GOOGLE|YAHOO|MICROSOFT)_(ROAD|HYBRID|AERIAL)$"),
+            'provider' : re.compile(r"^([A-Z_]+)$"),
             'label' : re.compile(r"^(?:[a-z0-9-_]+)$")
             }
 
@@ -100,7 +100,7 @@ class validate :
         input = input.upper()
 
         if not self.regexp('provider', input) :
-            raise Exception, "Not a valid provider : %s" % p
+            raise Exception, "Not a valid provider : %s" % input
 
         return input
 
