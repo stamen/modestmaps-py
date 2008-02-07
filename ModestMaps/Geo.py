@@ -71,6 +71,39 @@ class Transformation:
         return Point((point.x*self.by - point.y*self.bx - self.cx*self.by + self.cy*self.bx) / (self.ax*self.by - self.ay*self.bx),
                      (point.x*self.ay - point.y*self.ax - self.cx*self.ay + self.cy*self.ax) / (self.bx*self.ay - self.by*self.ax))
 
+def deriveTransformation(a1x, a1y, a2x, a2y, b1x, b1y, b2x, b2y, c1x, c1y, c2x, c2y):
+    """ Generates a transform based on three pairs of points, a1 -> a2, b1 -> b2, c1 -> c2.
+    """
+    ax, bx, cx = linearSolution(a1x, a1y, a2x, b1x, b1y, b2x, c1x, c1y, c2x)
+    ay, by, cy = linearSolution(a1x, a1y, a2y, b1x, b1y, b2y, c1x, c1y, c2y)
+    
+    return Transformation(ax, bx, cx, ay, by, cy)
+
+def linearSolution(r1, s1, t1, r2, s2, t2, r3, s3, t3):
+    """ Solves a system of linear equations.
+
+          t1 = (a * r1) + (b + s1) + c
+          t2 = (a * r2) + (b + s2) + c
+          t3 = (a * r3) + (b + s3) + c
+
+        r1 - t3 are the known values.
+        a, b, c are the unknowns to be solved.
+        returns the a, b, c coefficients.
+    """
+
+    # make them all floats
+    r1, s1, t1, r2, s2, t2, r3, s3, t3 = map(float, (r1, s1, t1, r2, s2, t2, r3, s3, t3))
+
+    a = (((t2 - t3) * (s1 - s2)) - ((t1 - t2) * (s2 - s3))) \
+      / (((r2 - r3) * (s1 - s2)) - ((r1 - r2) * (s2 - s3)))
+
+    b = (((t2 - t3) * (r1 - r2)) - ((t1 - t2) * (r2 - r3))) \
+      / (((s2 - s3) * (r1 - r2)) - ((s1 - s2) * (r2 - r3)))
+
+    c = t1 - (r1 * a) - (s1 * b)
+    
+    return a, b, c
+
 class IProjection:
     def __init__(self, zoom, transformation=Transformation(1, 0, 0, 0, 1, 0)):
         self.zoom = zoom
