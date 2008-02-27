@@ -8,6 +8,7 @@ __date__       = "$Date: 2008/01/04 06:23:46 $"
 __copyright__  = "Copyright (c) 2007-2008 Aaron Straup Cope. BSD license : http://www.modestmaps.com/license."
 
 import wscompose
+import convexhull
 
 import wscompose.plotting
 import wscompose.dithering
@@ -34,6 +35,16 @@ class handler (wscompose.plotting.handler, wscompose.dithering.handler) :
         if self.ctx.has_key('filter') and self.ctx['filter'] == 'atkinson' :
             img = self.atkinson_dithering(img)
 
+        #
+
+        if self.ctx.has_key('polylines') :
+            img = self.draw_polylines(img)
+
+        #
+
+        if self.ctx.has_key('hulls') :
+            img = self.draw_convex_hulls(img)
+            
         #
         
         if self.ctx.has_key('dots') :
@@ -94,8 +105,83 @@ class handler (wscompose.plotting.handler, wscompose.dithering.handler) :
         
     # ##########################################################
 
-    # only works for method='bbox' ... WTF?
+    def draw_polylines (self, img) :
 
+        for poly in self.ctx['polylines'] :
+            img = self.draw_polyline(img, poly)
+
+        return img
+
+    # ##########################################################
+    
+    def draw_polyline (self, img, poly) :
+        
+        dr = ImageDraw.Draw(img)
+        cnt = len(poly)
+        i = 0
+
+        grey = (42, 42, 42)
+        
+        while i < cnt : 
+
+            j = i + 1
+
+            if j == cnt :
+                break
+
+            cur = self.latlon_to_point(poly[i]['latitude'], poly[i]['longitude'])
+            next = self.latlon_to_point(poly[j]['latitude'], poly[j]['longitude'])            
+
+            dr.line((cur.x, cur.y, next.x, next.y), fill=grey, width=4)
+            i += 1
+
+        #
+                
+        return img
+            
+    # ##########################################################
+
+    def draw_convex_hulls(self, img) :
+
+        dr = ImageDraw.Draw(img)
+
+        for type in self.ctx['hulls'] :
+
+            points = []
+            
+            for coord in self.ctx[type] : 
+
+                pt = self.latlon_to_point(coord['latitude'], coord['longitude'])    
+                points.append((pt.x, pt.y))
+
+            hull = convexhull.convexHull(points)
+
+            #
+            # no way to assign width to polygon outlines in PIL...
+            #
+            
+            pink = (255, 0, 132)
+            cnt = len(hull)
+            i = 0
+
+            while i < cnt : 
+
+                (x1, y1) = hull[i]
+                
+                j = i + 1
+
+                if j == cnt :
+                    (x2, y2) = hull[0]
+                else :
+                    (x2, y2) = hull[j]
+
+                dr.line((x1, y1, x2, y2), fill=pink, width=6)
+                i += 1
+            
+        return img
+    
+    # ##########################################################
+    
     # To do : move this code in to methods that can be run
     # easily from unit tests and/or CLI tools...
     
@@ -389,6 +475,34 @@ class handler (wscompose.plotting.handler, wscompose.dithering.handler) :
             except Exception, e :
                 self.error(141, e)
                 return False
+
+        #
+        # polylines
+        #
+
+        if params.has_key('polyline') :
+
+            try :
+                valid['polylines'] = validator.polylines(params['polyline'])
+            except Exception, e :
+                self.error(142, e)
+                return False
+
+        #
+        #
+        #
+
+        if params.has_key('convex') :
+
+            try :
+                valid['hulls'] = validator.convex(params['convex'])
+            except Exception, e :
+                self.error(143, e)
+                return False
+            
+        #
+        # Happy happy
+        #
         
         return valid
 
@@ -409,20 +523,20 @@ class handler (wscompose.plotting.handler, wscompose.dithering.handler) :
     def help_parameters (self) :
         wscompose.handler.help_parameters(self)
 
-        self.help_option('marker', 'Draw a pinwin-style marker at a given point. You may pass multiple marker arguments, each of which should contain the following comma separated values :', False)
-        self.help_option('label', 'A unique string to identify the marker by', True, 1)
-        self.help_option('point', 'A comma-separated string containing the latitude and longitude indicating the point where the marker should be placed', True, 1)
-        self.help_option('dimensions', 'A comma-separated string containing the height and width of the marker canvas - the default is 75 x 75', False, 1)   
-
         self.help_option('dot', 'Draw a pinwin-style dot (but not the marker) at a given point. You may pass multiple dot arguments, each of which should contain the following comma separated values :', False)
         self.help_option('label', 'A unique string to identify the dot by', True, 1)
         self.help_option('point', 'A comma-separated string containing the latitude and longitude indicating the point where the dot should be placed', True, 1)
         self.help_option('radius', 'The radius, in pixels, of the dot - the default is 18', False, 1)    
 
-        self.help_option('plot', 'Plot -- but do not render -- the x and y coordinates for a given point. Coordinate data will be returned HTTP header(s) named \'X-wscompose-plot-\' followed by the label you choose when passing latitude and longitude information. You may pass multiple plot arguments, each of which should contain the following comma separated values :', False)
-        self.help_option('label', 'A unique string to identify the plotting by', True, 1)
-        self.help_option('point', 'A comma-separated string containing the latitude and longitude indicating the point to be plotted', True, 1)
+        self.help_option('marker', 'Draw a pinwin-style marker at a given point. You may pass multiple marker arguments, each of which should contain the following comma separated values :', False)
+        self.help_option('label', 'A unique string to identify the marker by', True, 1)
+        self.help_option('point', 'A comma-separated string containing the latitude and longitude indicating the point where the marker should be placed', True, 1)
+        self.help_option('dimensions', 'A comma-separated string containing the height and width of the marker canvas - the default is 75 x 75', False, 1)   
 
+        self.help_option('polyline', 'Draw a polyline on the map. Polylines are passed as multiple coordinates (comma-separated latitude and longitude pairs) each separated by a single space. You may pass multiple \'polyline\' arguments. This option is currently experimental and arguments may change.', False)
+
+        self.help_option('convex', 'Draw a polyline representing the convex hull of a collection of points passed in the \'marker\', \'dot\' or \'plot\' arguments (see above). Valid options are, not surprisingly : \'marker\', \'dot\' or \'plot\'; you may pass multiple \'convex\' arguments. This option is currently experimental and arguments may change.', False)
+        
         self.help_option('fill', 'A helper argument which if present will cause each marker specified to be filled with the contents of map for the marker\'s coordinates at zoom level 15. The value should be a valid ModestMaps map tile provider.', False)
         
         self.help_option('adjust', 'Adjust the size of the bounding box argument by (n) kilometers; you may want to do this if you have markers positioned close to the sides of your bounding box', False)

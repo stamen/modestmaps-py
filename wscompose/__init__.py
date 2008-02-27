@@ -240,8 +240,8 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.send_header("X-wscompose-Image-Width", img.size[0])        
         self.send_header("X-wscompose-Map-Zoom", self.ctx['zoom'])
 
-        if self.ctx.has_key('plot') :
-            for data in self.ctx['plot'] :
+        if self.ctx.has_key('plots') :
+            for data in self.ctx['plots'] :
 
                 pt = self.latlon_to_point(data['latitude'], data['longitude'])
 
@@ -379,6 +379,12 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
                     self.error(124, e)
                     return False
 
+            # you can blame migurski for this
+            
+            if params.has_key('zoom') :
+                self.error(125, "'zoom' is not a valid argument when method is 'extent'")
+                return False
+                
         elif params['method'][0] == 'bbox' :
 
             try :
@@ -405,6 +411,13 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
                     valid['adjust'] = validator.bbox_adjustment(params['adjust'][0])
                 except Exception, e :
                     self.error(124, e)
+                    return False
+
+            # you can blame migurski for this
+            
+            for p in ('height', 'width') :
+                if params.has_key(p) :
+                    self.error(125, "'%s' is not a valid argument when method is 'bbox'" % p)
                     return False
                 
         # center
@@ -447,7 +460,7 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
         if params.has_key('plot') :
 
             try :
-                valid['plot'] = validator.plots(params['plot'])
+                valid['plots'] = validator.plots(params['plot'])
             except Exception, e :
                 self.error(141, e)
                 return False
@@ -539,9 +552,9 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
         X-wscompose-Map-Zoom: 14.0
         X-wscompose-plot-roy: 667,285""")
 
-        self.help_para("Most headers are self-explanatory. Markers, dots and plotting coordinates are a little more complicated.")
+        self.help_para("Most headers are self-explanatory. Plotted coordinates are a little more complicated.")
 
-        self.help_para("The string after 'X-wscompose-plot-' is the label assigned to the marker when the API call was made. The value is a comma separated list containing the x and y coordinates for (label's) corresponding latitude and longitude.")
+        self.help_para("The string after 'X-wscompose-plot' is the label assigned to the marker when the API call was made. The value is a comma separated list containing the x and y coordinates for (label's) corresponding latitude and longitude.")
         
     # ##########################################################    
 

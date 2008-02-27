@@ -20,7 +20,8 @@ class validate :
             'adjust' : re.compile(r"^(\d+(?:\.\d*)?|\d*?\.\d+)$"),
             'num' : re.compile(r"^\d+$"),
             'provider' : re.compile(r"^([A-Z_]+)$"),
-            'label' : re.compile(r"^(?:[a-z0-9-_]+)$")
+            'label' : re.compile(r"^(?:[a-z0-9-_]+)$"),
+            'hull' : re.compile(r"^(marker|dot|plot)$")   
             }
 
     # ##########################################################
@@ -310,6 +311,49 @@ class validate :
 
         return valid
             
+    # ##########################################################
+
+    def polylines (self, lines) :
+
+        valid = []
+        
+        for poly in lines :
+
+            points = []
+            
+            for pt in poly.split(" ") :
+            
+                coord = pt.split(",")
+
+                if len(coord) != 2 :
+                    raise Exception, "Polyline coordinate missing data"
+                
+                (lat, lon) = map(string.strip, coord) 
+                
+                lat = self.latlon(lat)
+                lon = self.latlon(lon)
+
+                points.append({'latitude':lat, 'longitude':lon})
+
+            valid.append(points)
+            
+        return valid
+    
+    # ##########################################################    
+
+    def convex (self, hulls) :
+        
+        valid = []
+
+        for label in hulls :
+
+            if not self.regexp('hull', label)  :
+                raise Exception, "Unknown marker type for convex hulls"
+
+            valid.append(label)
+
+        return valid
+    
     # ##########################################################
     
     def __num (self, input) :

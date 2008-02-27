@@ -441,7 +441,7 @@ class  pinwin :
     
     # ##########################################################
     
-    def mk_perspective_shadow (self) :
+    def mk_perspective_shadow (self, img, corners) :
 
         #
         # I R DUHM ... why won't someone explain to me the math behind : 
@@ -454,9 +454,36 @@ class  pinwin :
         #
         # im.transform(size, PERSPECTIVE, data)
         #
+
+        """
+            
+        Returns a new surface containing the image reshaped to fit inside the quadrilateral defined by the given vertices (top-left, top-right, bottom-right, bottom-left).
         
-        pass
-    
+        For the sake of my sanity, we're assuming that the left and right sides, post-transform, will be straight vertical lines. If you intend them to be otherwise, I shall punch you in the cock. Also assumed is that the smaller end doesn't extend above or below the longer end (though I'm not sure that it doing so would actually be a problem).
+        """
+        
+        tl, tr, br, bl = corners
+        sourceSize = img.size
+        newSize = (max(tr[0], br[0]), max(bl[1], br[1]))
+        
+        a = float(sourceSize[0] * (br[1] - tr[1])) / \
+            (newSize[0] * (bl[1] - tl[1]))
+        b = 0
+        c = 0
+        d = float(sourceSize[1] * (tl[1] - tr[1])) / \
+            (newSize[0] * (bl[1] - tl[1]))
+        e = float(sourceSize[1]) / \
+            (bl[1] - tl[1])
+        f = float(-(sourceSize[1] * tl[1])) / \
+            (bl[1] - tl[1])
+        g = float(tl[1] - tr[1] + br[1] - bl[1]) / \
+            (newSize[0] * (bl[1] - tl[1]))
+        h = 0
+        vals = [a, b, c, d, e, f, g, h]
+        
+        return img.transform (newSize, Image.PERSPECTIVE, vals, Image.BILINEAR)
+           
+
     # ##########################################################
 
     def mk_alpha (self) :
@@ -565,7 +592,7 @@ if __name__ == '__main__' :
     h = 100
     
     pw = pinwin(w, h, 15)
-    im = pw.draw()
-        
-    im.save("/home/asc/Desktop/mrk.png")
+    im = pw.mk_pinwin()
+    im = pw.mk_perspective_shadow(im, ((10,100), (10,10), (500,500), (500,200)))
+    # im.save("/home/asc/Desktop/mrk.png")
     im.show()
