@@ -19,7 +19,7 @@ class validate :
             'coord' : re.compile(r"^-?\d+(?:\.\d+)?$"),
             'adjust' : re.compile(r"^(\d+(?:\.\d*)?|\d*?\.\d+)$"),
             'num' : re.compile(r"^\d+$"),
-            'provider' : re.compile(r"^([A-Z_]+)$"),
+            'provider' : re.compile(r"^(\w+)$"),
             'label' : re.compile(r"^(?:[a-z0-9-_]+)$"),
             'hull' : re.compile(r"^(marker|dot|plot)$")   
             }
