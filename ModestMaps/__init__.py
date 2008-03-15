@@ -7,7 +7,7 @@
 (37.804, -122.263)
 """
 
-import PIL.Image, urllib, StringIO, math, thread, time
+import sys, PIL.Image, urllib, httplib, urlparse, StringIO, math, thread, time
 
 import Tiles
 import Providers
@@ -106,8 +106,16 @@ class TileRequest:
 
         # this is the time-consuming part
         try:
-            imgs = [PIL.Image.open(StringIO.StringIO(urllib.urlopen(url).read())).convert('RGBA')
-                    for url in urls]                
+            imgs = []
+        
+            for (scheme, netloc, path, params, query, fragment) in map(urlparse.urlparse, urls):
+                conn = httplib.HTTPConnection(netloc)
+                conn.request('GET', path + '?' + query)
+                response = conn.getresponse()
+                
+                if str(response.status).startswith('2'):
+                    imgs.append(PIL.Image.open(StringIO.StringIO(response.read())).convert('RGBA'))
+
         except:
                 
             if verbose:
