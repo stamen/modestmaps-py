@@ -218,8 +218,11 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
     
     def send_map (self, img) :
 
-        # Oh PIL, why don't you have a 'tostringDWIM' method?
+        if self.ctx['output'] == 'json' :
+            return self.send_map_as_json(img)
 
+        #
+        
         fh = StringIO.StringIO()
         img.save(fh, "PNG")
         
@@ -232,7 +235,39 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         self.wfile.write(fh.getvalue())
         return
+
+    # ##########################################################
+
+    def send_map_as_json (self, img) :
+
+        js = self.generate_javascript_output(img)
         
+        self.send_response(200, "OK")
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", len(js))         
+
+        self.send_x_headers(img)
+        self.end_headers()
+
+        self.wfile.write(js)
+        return
+
+    # ##########################################################
+
+    def generate_javascript_output(self, img) :
+
+        import base64
+        
+        fh = StringIO.StringIO()
+        img.save(fh, "PNG")
+
+        js = "{\"data\":\"%s\"})" % base64.b64encode(fh.getvalue())
+
+        if self.ctx.has_key('json_callback') :
+            js = "%s(%s)" % (self.ctx['json_callback'], js)
+
+        return js
+    
     # ##########################################################
 
     def send_x_headers (self, img) :
@@ -319,7 +354,7 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
         # I am a blank canvas
         #
         
-        valid = {}
+        valid = {'output' : 'png'}
 
         #
         # La la la - I can't hear you
@@ -464,7 +499,33 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
             except Exception, e :
                 self.error(141, e)
                 return False
-        
+
+        #
+        # json ?
+        #
+
+        if params.has_key('output') :
+
+            if params['output'][0] == 'javascript' :
+                pass
+
+            elif params['output'][0] == 'json' :
+                if not params.has_key('callback') :
+                    self.error(142, 'Missing JSON callback')
+                    return False
+            
+                try :
+                    valid['json_callback'] = validator.json_callback(params['callback'][0])
+                except Exception, e:
+                    self.error(143, e)
+                    return False
+            else :
+                self.error(144, "Not a valid output format")
+                return False
+            
+            valid['output'] = 'json'
+            
+                
         #
         # whoooosh
         #
@@ -634,6 +695,8 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         err_code = self.sanitize(err_code)
         err_msg  = self.sanitize(err_msg)
+
+        print "[%s] %s" % (err_code, err_msg)
         
         self.send_response(500, "Server Error")
         self.send_header("Content-Type", "application/xml") 

@@ -353,6 +353,15 @@ class validate :
             valid.append(label)
 
         return valid
+
+    # ##########################################################
+
+    def json_callback(self, func) :
+
+        if not self.re['label'].match(func) :
+            raise Exception, "Invalid JSON callback name"
+        
+        return func
     
     # ##########################################################
     
