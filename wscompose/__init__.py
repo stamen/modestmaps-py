@@ -261,7 +261,27 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
         fh = StringIO.StringIO()
         img.save(fh, "PNG")
 
-        js = "{\"data\":\"%s\"})" % base64.b64encode(fh.getvalue())
+        # this probably means it's time to
+        # invest in a templating system...
+        
+        js = "{"
+
+        js += "\"X-wscompose-Image-Height:\"%s\"," % img.size[1]
+        js += "\"X-wscompose-Image-Width:\"%s\"," % img.size[0]
+        js += "\"X-wscompose-Map-Zoom\":\"%s\"," % self.ctx['zoom']
+
+        if self.ctx.has_key('plots') :
+            for data in self.ctx['plots'] :
+
+                pt = self.latlon_to_point(data['latitude'], data['longitude'])
+
+                header = "X-wscompose-Plot-%s" % data['label']
+                coords = "%s,%s" % (int(pt.x), int(pt.y))
+
+                js += "\"%s\":\"%s\"," % (header, coords)
+
+        js += "\"data\":\"%s\"" % base64.b64encode(fh.getvalue())
+        js += "}"
 
         if self.ctx.has_key('json_callback') :
             js = "%s(%s)" % (self.ctx['json_callback'], js)
@@ -506,10 +526,12 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
         if params.has_key('output') :
 
-            if params['output'][0] == 'javascript' :
-                pass
+            out = params['output'][0].lower()
+            
+            if out == 'json' :
+                valid['output'] = 'json'                
 
-            elif params['output'][0] == 'json' :
+            elif out == 'javascript' :
                 if not params.has_key('callback') :
                     self.error(142, 'Missing JSON callback')
                     return False
@@ -519,12 +541,16 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
                 except Exception, e:
                     self.error(143, e)
                     return False
+
+                valid['output'] = 'json'
+
+            elif out == 'png' :
+                #  set above
+                pass
+            
             else :
-                self.error(144, "Not a valid output format")
+                self.error(144, 'Not a valid output format')
                 return False
-            
-            valid['output'] = 'json'
-            
                 
         #
         # whoooosh
@@ -590,6 +616,11 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.help_option('bbox', 'Render all the map tiles necessary to display a bounding box at a specific zoom level. If defined, the following parameters must also be present : ', False, 1)
         self.help_option('bbox', 'A bounding box comprised of comma-separated decimal coordinates in the following order : SW latitude, SW longitude, NE latitude, NE longitude', True, 2)
         self.help_option('accuracy', 'The zoom level / accuracy (as defined by ModestMaps rather than any individual tile provider) of the final image.', True, 2)
+
+        self.help_option('output', 'Although the default output format for maps is \'png\' (you know, like a PNG image file) you may also specify the following alternatives: ', False)
+        self.help_option('json', 'Return a Base64 encoded version of a PNG image, as well as any extra X-wscompose headers, as JSON data structure.', False, 1)        
+        self.help_option('javascript', 'Return a Base64 encoded version of a PNG image, as well as any extra X-wscompose headers, as JSON data structure wrapped in a function whose name is defined by the \'callback\' parameter.', False, 1)        
+        self.help_option('callback', 'Required if the output format is \'javascript\'; this is the name of the callback function that your JSON data structure will be wrapped in.', False)        
 
         self.help_option('plot', 'Plot -- but do not render -- the x and y coordinates for a given point. Coordinate data will be returned HTTP header(s) named \'X-wscompose-plot-\' followed by the label you choose when passing latitude and longitude information. You may pass multiple plot arguments, each of which should contain the following comma separated values :', False)
         self.help_option('label', 'A unique string to identify the plotting by', True, 1)
