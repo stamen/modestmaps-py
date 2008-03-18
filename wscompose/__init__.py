@@ -266,8 +266,8 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
         
         js = "{"
 
-        js += "\"X-wscompose-Image-Height:\"%s\"," % img.size[1]
-        js += "\"X-wscompose-Image-Width:\"%s\"," % img.size[0]
+        js += "\"X-wscompose-Image-Height\":\"%s\"," % img.size[1]
+        js += "\"X-wscompose-Image-Width\":\"%s\"," % img.size[0]
         js += "\"X-wscompose-Map-Zoom\":\"%s\"," % self.ctx['zoom']
 
         if self.ctx.has_key('plots') :
