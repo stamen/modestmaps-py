@@ -41,7 +41,7 @@ class Point:
         return '(%(x).3f, %(y).3f)' % self.__dict__
     
 class Coordinate:
-    MAX_ZOOM = 20
+    MAX_ZOOM = 25
 
     def __init__(self, row, column, zoom):
         self.row = row
@@ -52,32 +52,32 @@ class Coordinate:
         return '(%(row).3f, %(column).3f @%(zoom).3f)' % self.__dict__
         
     def copy(self):
-        return Coordinate(self.row, self.column, self.zoom)
+        return self.__class__(self.row, self.column, self.zoom)
         
     def container(self):
-        return Coordinate(math.floor(self.row), math.floor(self.column), self.zoom)
+        return self.__class__(math.floor(self.row), math.floor(self.column), self.zoom)
 
     def zoomTo(self, destination):
-        return Coordinate(self.row * math.pow(2, destination - self.zoom),
-                          self.column * math.pow(2, destination - self.zoom),
-                          destination)
+        return self.__class__(self.row * math.pow(2, destination - self.zoom),
+                              self.column * math.pow(2, destination - self.zoom),
+                              destination)
     
     def zoomBy(self, distance):
-        return Coordinate(self.row * math.pow(2, distance),
-                          self.column * math.pow(2, distance),
-                          self.zoom + distance)
+        return self.__class__(self.row * math.pow(2, distance),
+                              self.column * math.pow(2, distance),
+                              self.zoom + distance)
 
     def up(self, distance=1):
-        return Coordinate(self.row - distance, self.column, self.zoom)
+        return self.__class__(self.row - distance, self.column, self.zoom)
 
     def right(self, distance=1):
-        return Coordinate(self.row, self.column + distance, self.zoom)
+        return self.__class__(self.row, self.column + distance, self.zoom)
 
     def down(self, distance=1):
-        return Coordinate(self.row + distance, self.column, self.zoom)
+        return self.__class__(self.row + distance, self.column, self.zoom)
 
     def left(self, distance=1):
-        return Coordinate(self.row, self.column - distance, self.zoom)
+        return self.__class__(self.row, self.column - distance, self.zoom)
 
 if __name__ == '__main__':
     import doctest
