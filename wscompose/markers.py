@@ -57,11 +57,14 @@ class  pinwin :
         self.cone_height = int(imgh / 6)
         self.cone_width = int(self.cone_height / 1.4)
         
-        # Just use some hard-coded size?
-
         if self.cone_width < 20 :
             self.cone_width = int(imgh * .55)
 
+        # no big honking cones. no!
+        
+        if self.cone_width > (imgw * .2) :
+            self.cone_width = max(int((imgw * .2)), 20)
+            
         #
         
         self.cone_height = int(imgh / 6) + self.adjust_cone_height
