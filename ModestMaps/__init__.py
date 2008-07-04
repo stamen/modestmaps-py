@@ -110,7 +110,7 @@ class TileRequest:
         
             for (scheme, netloc, path, params, query, fragment) in map(urlparse.urlparse, urls):
                 conn = httplib.HTTPConnection(netloc)
-                conn.request('GET', path + '?' + query)
+                conn.request('GET', path + ('?' + query).rstrip('?'))
                 response = conn.getresponse()
                 
                 if str(response.status).startswith('2'):
