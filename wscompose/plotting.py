@@ -256,8 +256,12 @@ class handler (wscompose.handler) :
         mx = mrk_data['x'] - int(mrk.x_offset)
         my = mrk_data['y'] - int(mrk.y_offset)
 
-        dx = mx + mrk.x_padding
-        dy = my + mrk.y_padding
+        # note the +2 which is necessary once we 
+        # paste the pinwin/alpha with an offset
+        # of (1,1) - see also : markers.py
+        
+        dx = mx + mrk.x_padding + 2
+        dy = my + mrk.y_padding + 2
 
         #
 
