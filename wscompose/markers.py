@@ -92,10 +92,10 @@ class  pinwin :
 
         self.x_padding = int(self.padding / 2)
         self.y_padding = int(self.padding / 2)
-        
+
         self.img_width = imgw
-        self.img_height = imgh
-        
+        self.img_height = imgh        
+                                       
     # ##########################################################
     
     def fh (self) :
@@ -378,8 +378,6 @@ class  pinwin :
         y2 = center_y + y_diff
 
         dr.pieslice((x1, y1, x2, y2), 90, 180, fill=fill)                
-        # dr.pieslice((x1, y1, x2, y2), 0, 360, outline='white')
-        # dr.line(c, fill='white')        
 
         # bottom right - this one has gaps but we don't
         # care and rely on the blurring to make them vanish!
@@ -402,8 +400,6 @@ class  pinwin :
         y2 = center_y + y_diff
 
         dr.pieslice((x1, y1, x2, y2), 0, 90, fill=fill)                
-        # dr.pieslice((x1, y1, x2, y2), 0, 360, outline='white')
-        # dr.line(c, fill='white')
 
         # top right
 
@@ -425,8 +421,6 @@ class  pinwin :
         y2 = center_y + y_diff
 
         dr.pieslice((x1, y1, x2, y2), 270, 0, fill=fill)
-        # dr.pieslice((x1, y1, x2, y2), 0, 360, outline='white')
-        # dr.line(c, fill='white')
 
         if not blurry :
             return im
@@ -519,8 +513,13 @@ class  pinwin :
         dr.ellipse((x1, y1, x2, y2), fill='white')
 
         # add the pinwin
+
+        # note the offset; required so that the top and left
+        # side outlines of the pinwin don't obscured by the
+        # alpha channel; this also affects the values of dx
+        # and dy in plotting.draw_marker
         
-        im.paste(pw, (0, 0), pw)
+        im.paste(pw, (1,1), pw)
 
         return im
 
@@ -530,13 +529,13 @@ class  pinwin :
 
         h = pw.size[1]
         w = max(pw.size[0], sh.size[0])
-        
+
         im = Image.new('RGBA', (w, h))
         dr = ImageDraw.Draw(im)
 
         # add the shadow
 
-        im.paste(sh, (0, 0), sh)
+        im.paste(sh, (0,0), sh)
         
         #  add the dot
         
@@ -557,8 +556,13 @@ class  pinwin :
         dr.ellipse((x1, y1, x2, y2), fill=pink)
 
         # add the pinwin
+
+        # note the offset; required so that the top and left
+        # side outlines of the pinwin don't obscured by the
+        # alpha channel; this also affects the values of dx
+        # and dy in plotting.draw_marker
         
-        im.paste(pw, (0, 0), pw)
+        im.paste(pw, (1,1), pw) 
 
         im.putalpha(al)
         return im
