@@ -92,7 +92,7 @@ class handler (wscompose.plotting.handler, wscompose.dithering.handler) :
                 self.send_header(header, sep.join(details))
 
         #
-        
+
         if self.ctx.has_key('dots') :
             for data in self.ctx['dots'] :
 
@@ -148,14 +148,16 @@ class handler (wscompose.plotting.handler, wscompose.dithering.handler) :
         for type in self.ctx['hulls'] :
 
             points = []
-            
-            for coord in self.ctx[type] : 
 
+            # sigh...
+            key = "%ss" % type
+            
+            for coord in self.ctx[key] : 
                 pt = self.latlon_to_point(coord['latitude'], coord['longitude'])    
                 points.append((pt.x, pt.y))
 
             hull = convexhull.convexHull(points)
-
+            
             #
             # no way to assign width to polygon outlines in PIL...
             #
@@ -165,7 +167,6 @@ class handler (wscompose.plotting.handler, wscompose.dithering.handler) :
             i = 0
 
             while i < cnt : 
-
                 (x1, y1) = hull[i]
                 
                 j = i + 1
@@ -177,7 +178,7 @@ class handler (wscompose.plotting.handler, wscompose.dithering.handler) :
 
                 dr.line((x1, y1, x2, y2), fill=pink, width=6)
                 i += 1
-            
+
         return img
     
     # ##########################################################
