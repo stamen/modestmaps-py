@@ -232,6 +232,9 @@ class handler (wscompose.plotting.handler, wscompose.dithering.handler) :
             img.paste(old, (bleed_x, bleed_y))
             
         #
+
+        for data in self.ctx['markers'] :
+            self.draw_shadow(img, data, bleed_x, bleed_y)
         
         for data in self.ctx['markers'] :
             self.draw_marker(img, data, bleed_x, bleed_y)

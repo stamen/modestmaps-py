@@ -8,7 +8,7 @@ __date__       = "$Date: 2008/01/04 06:23:46 $"
 __copyright__  = "Copyright (c) 2007-2008 Aaron Straup Cope. BSD license : http://www.modestmaps.com/license."
 
 import wscompose
-import wscompose.markers
+import wscompose.pwmarker
 import string
 import random
 import re
@@ -74,7 +74,6 @@ class handler (wscompose.handler) :
             a = mrk_data['adjust_cone_height']
             
             mrk = self.load_marker(w, h, a)
-
             pt = self.latlon_to_point(mrk_data['latitude'], mrk_data['longitude'])
             
             # loc = ModestMaps.Geo.Location(mrk_data['latitude'], mrk_data['longitude'])
@@ -90,9 +89,9 @@ class handler (wscompose.handler) :
 
             x1 = mrk_data['x'] - int(mrk.x_offset)
             y1 = mrk_data['y'] - int(mrk.y_offset)
-            
-            x2 = x1 + (w + mrk.padding)
-            y2 = y1 + (h + mrk.padding)
+
+            x2 = x1 + (w + (mrk.x_padding * 2))
+            y2 = y1 + (h + (mrk.y_padding * 2))
             
             mrk_data['canvas'] = (x1, y1, x2, y2)
             
@@ -163,6 +162,7 @@ class handler (wscompose.handler) :
         test_label = test['label']
 
         # print "does %s overlap %s" % (cur_label, test_label)
+        # print "current %s" % current
         
         # first, ensure that some part of 'current'
         # overlaps 'test' on the x axis
@@ -231,20 +231,23 @@ class handler (wscompose.handler) :
         self.sort_markers()
             
         for data in self.ctx['markers'] :
+            self.draw_shadow(img, data)
+
+        for data in self.ctx['markers'] :
             self.draw_marker(img, data)
 
         return img
     
     # ##########################################################
-        
-    def draw_marker (self, img, mrk_data, bleed_x=0, bleed_y=0) :
+
+    def draw_shadow (self, img, mrk_data, bleed_x=0, bleed_y=0) :
 
         w = mrk_data['width']
         h = mrk_data['height']
         a = mrk_data['adjust_cone_height']
         
         mrk = self.load_marker(w, h, a)
-                                        
+        
         loc = ModestMaps.Geo.Location(mrk_data['latitude'], mrk_data['longitude'])
         pt = self.ctx['map'].locationPoint(loc)            
 
@@ -256,19 +259,49 @@ class handler (wscompose.handler) :
         mx = mrk_data['x'] - int(mrk.x_offset)
         my = mrk_data['y'] - int(mrk.y_offset)
 
-        # note the +2 which is necessary once we 
-        # paste the pinwin/alpha with an offset
-        # of (1,1) - see also : markers.py
-        
-        dx = mx + mrk.x_padding + 2
-        dy = my + mrk.y_padding + 2
+        dx = mx + mrk.x_padding
+        dy = my + mrk.y_padding
 
         #
 
-        img.paste(mrk.fh(), (mx, my), mrk.fh())
+        shadow = mrk.fh('shadow')
+        img.paste(shadow, (mx, my), shadow)
         
         mrk_data['x_fill'] = dx
         mrk_data['y_fill'] = dy        
+
+    # ##########################################################
+    
+    def draw_marker (self, img, mrk_data, bleed_x=0, bleed_y=0) :
+
+        w = mrk_data['width']
+        h = mrk_data['height']
+        a = mrk_data['adjust_cone_height']
+        
+        mrk = self.load_marker(w, h, a)
+        
+        loc = ModestMaps.Geo.Location(mrk_data['latitude'], mrk_data['longitude'])
+        pt = self.ctx['map'].locationPoint(loc)            
+
+        #
+        
+        mrk_data['x'] = int(pt.x) + bleed_x
+        mrk_data['y'] = int(pt.y) + bleed_y
+
+        mx = mrk_data['x'] - int(mrk.x_offset)
+        my = mrk_data['y'] - int(mrk.y_offset)
+        
+        dx = mx + mrk.x_padding
+        dy = my + mrk.y_padding
+
+        #
+
+        pinwin = mrk.fh('pinwin')
+        img.paste(pinwin, (mx, my), pinwin)
+        
+        mrk_data['x_fill'] = dx
+        mrk_data['y_fill'] = dy        
+
            
     # ##########################################################
     
@@ -290,10 +323,13 @@ class handler (wscompose.handler) :
     def load_marker (self, w, h, a) :
 
         key = "%s-%s-%s" % (w, h, a)
-
+        
         if not self.__markers__.has_key(key) :
-            self.__markers__[key] = wscompose.markers.pinwin(w, h, a)
-
+            mrk = wscompose.pwmarker.PinwinMarker(w, h, a)
+            mrk.draw()
+            
+            self.__markers__[key] = mrk
+            
         return self.__markers__[key]
 
     # ##########################################################
