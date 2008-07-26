@@ -13,6 +13,12 @@ import ImageFilter
 import StringIO
 import base64
 
+# IMPORTANT : THIS PACKAGE IS OFFICIALLY
+# DEPRECATED IN FAVOUR OF pwmarker; EVENTUALLY
+# IT WILL BE REMOVED ALTOGETHER. WE NOW RETURN
+# YOU TO YOUR REGULARLY SCHEDULED PROGRAMMING.
+# (20080725/asc)
+
 # DANGER WILL ROBINSON : YOU ARE ABOUT TO
 # ENCOUNTER CODE THAT WILL MAKE YOU WEEP.
 # I KNOW. I CRY EVERY TIME I LOOK AT IT.
@@ -428,14 +434,14 @@ class  pinwin :
         return self.mk_shadow_blurry(im)
 
     # ##########################################################
-    
+     
     def mk_shadow_blurry (self, sh, iterations=10) :
 
         for i in range(1, iterations) :
             sh = sh.filter(ImageFilter.BLUR)
 
         return sh
-    
+   
     # ##########################################################
     
     def mk_perspective_shadow (self, img, corners) :
@@ -520,7 +526,6 @@ class  pinwin :
         # and dy in plotting.draw_marker
         
         im.paste(pw, (1,1), pw)
-
         return im
 
     # ##########################################################
@@ -595,11 +600,5 @@ class  pinwin :
 
 if __name__ == '__main__' :
 
-    w = 400
-    h = 100
-    
-    pw = pinwin(w, h, 15)
-    im = pw.mk_pinwin()
-    im = pw.mk_perspective_shadow(im, ((10,100), (10,10), (500,500), (500,200)))
-    # im.save("/home/asc/Desktop/mrk.png")
-    im.show()
+    print "STOP USING ME. pwmarker is your new bicycle"
+    pass
