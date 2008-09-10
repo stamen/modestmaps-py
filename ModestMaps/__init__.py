@@ -102,7 +102,7 @@ class TileRequest:
         urls = self.provider.getTileUrls(self.coord)
         
         if verbose:
-            print 'Requesting', urls, '- attempt no.', attempt, 'in thread', thread.get_ident()
+            print 'Requesting', urls, '- attempt no.', attempt, 'in thread', hex(thread.get_ident())
 
         # this is the time-consuming part
         try:
@@ -139,6 +139,20 @@ class TileRequest:
 class TileQueue(list):
     """ List of TileRequest objects, that's sensitive to when they're loaded.
     """
+
+    def __getslice__(self, i, j):
+        """ Return a TileQueue when a list slice is called-for.
+        
+            Python docs say that __getslice__ is deprecated, but its
+            replacement __getitem__ doesn't seem to be doing anything.
+        """
+        other = TileQueue()
+        
+        for t in range(i, j):
+            if t < len(self):
+                other.append(self[t])
+
+        return other
 
     def pending(self):
         """ True if any contained tile is still loading.
@@ -309,25 +323,29 @@ class Map:
                 tileCoord = tileCoord.right()
             rowCoord = rowCoord.down()
 
-        return self.render_tiles(tiles, self.dimensions.x, self.dimensions.y)
+        return self.render_tiles(tiles, self.dimensions.x, self.dimensions.y, verbose)
 
     #
     
-    def render_tiles (self, tiles, img_width, img_height, verbose=False) :
+    def render_tiles(self, tiles, img_width, img_height, verbose=False):
         
         lock = thread.allocate_lock()
+        threads = 32
         
-        for tile in tiles:
-            # request all needed images
-            thread.start_new_thread(tile.load, (lock, verbose))
+        for off in range(0, len(tiles), threads):
+            pool = tiles[off:(off + threads)]
             
-        # if it takes any longer than 20 sec overhead + 10 sec per tile, give up
-        due = time.time() + 20 + len(tiles) * 10
-        
-        while time.time() < due and tiles.pending():
-            # hang around until they are loaded or we run out of time...
-            time.sleep(1)
-    
+            for tile in pool:
+                # request all needed images
+                thread.start_new_thread(tile.load, (lock, verbose))
+                
+            # if it takes any longer than 20 sec overhead + 10 sec per tile, give up
+            due = time.time() + 20 + len(pool) * 10
+            
+            while time.time() < due and pool.pending():
+                # hang around until they are loaded or we run out of time...
+                time.sleep(1)
+
         mapImg = PIL.Image.new('RGB', (img_width, img_height))
         
         for tile in tiles:
