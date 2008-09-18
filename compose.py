@@ -2,123 +2,117 @@
 
 import sys, math, optparse, ModestMaps
 
-def parseWidthHeight(option, opt, values, parser):
-    if values[0] > 0 and values[1] > 0:
-        parser.width = values[0]
-        parser.height = values[1]
-        
-    else:
-        raise optparse.OptionValueError('Image dimensions must be positive (got: width %d, height %d)' % values)
+class BadComposure(Exception):
+    pass
 
-def assertWidthHeight(parser):
-    try:
-        parser.width, parser.height
-    except AttributeError:
-        raise optparse.OptionValueError('Image dimensions must be provided, e.g.: --dimensions <width> <height>')
+parser = optparse.OptionParser(usage="""compose.py [options] file
 
-def parseProvider(option, opt, value, parser):
-    if value == 'MICROSOFT_ROAD':
-        parser.provider = ModestMaps.Microsoft.RoadProvider()
-        
-    elif value == 'MICROSOFT_AERIAL':
-        parser.provider = ModestMaps.Microsoft.AerialProvider()
-        
-    elif value == 'MICROSOFT_HYBRID':
-        parser.provider = ModestMaps.Microsoft.HybridProvider()
-        
-    elif value == 'GOOGLE_ROAD':
-        parser.provider = ModestMaps.Google.RoadProvider()
-        
-    elif value == 'GOOGLE_AERIAL':
-        parser.provider = ModestMaps.Google.AerialProvider()
-        
-    elif value == 'GOOGLE_HYBRID':
-        parser.provider = ModestMaps.Google.HybridProvider()
-        
-    elif value == 'GOOGLE_TERRAIN':
-        parser.provider = ModestMaps.Google.TerrainProvider()
-        
-    elif value == 'YAHOO_ROAD':
-        parser.provider = ModestMaps.Yahoo.RoadProvider()
-        
-    elif value == 'YAHOO_AERIAL':
-        parser.provider = ModestMaps.Yahoo.AerialProvider()
-        
-    elif value == 'YAHOO_HYBRID':
-        parser.provider = ModestMaps.Yahoo.HybridProvider()
-        
-    elif value == 'BLUE_MARBLE':
-        parser.provider = ModestMaps.BlueMarble.Provider()
-        
-    elif value == 'OPEN_STREET_MAP':
-        parser.provider = ModestMaps.OpenStreetMap.Provider()
-        
-    else:
-        raise optparse.OptionValueError('Provider must be in eligible list (got: "%s")' % value)
+There are three ways to set a map coverage area.
 
-def assertProvider(parser):
-    try:
-        parser.provider
-    except AttributeError:
-        raise optparse.OptionValueError('Provider must be provided, e.g.: --provider <name>')
+1) Center, zoom, and dimensions: create a map of the specified size,
+   centered on a given geographical point at a given zoom level:
 
-def parseCenterZoom(option, opt, values, parser):
-    assertProvider(parser)
+   python compose.py -p OPENSTREETMAP -d 800 800 -c 37.8 -122.3 -z 11 out.jpg
 
-    coordinate = parser.provider.locationCoordinate(ModestMaps.Geo.Location(values[0], values[1])).zoomTo(values[2])
-    coordPoint = ModestMaps.calculateMapCenter(parser.provider, coordinate)
-    parser.coord, parser.offset = coordPoint
+2) Extent and dimensions: create a map of the specified size that
+   adequately covers the given geographical extent:
 
-def parseExtent(option, opt, values, parser):
-    assertWidthHeight(parser)
-    assertProvider(parser)
+   python compose.py -p MICROSOFT_ROAD -d 800 800 -e 36.9 -123.5 38.9 -121.2 out.png
 
-    coordPoint = ModestMaps.calculateMapExtent(parser.provider,
-                                               parser.width, parser.height,
-                                               ModestMaps.Geo.Location(values[0], values[1]),
-                                               ModestMaps.Geo.Location(values[2], values[3]))
-    parser.coord, parser.offset = coordPoint
-
-parser = optparse.OptionParser(usage="""compose.py [options]
-
-Example map of San Francisco and Oakland:
-    python compose.py -o out.png -p MICROSOFT_ROAD -d 800 800 -c 37.8 -122.3 11
-
-Map provider and output image dimensions MUST be specified before extent
-or center/zoom. Multiple extents and center/zooms may be specified, but
-only the last will be used.""")
+3) Extent and zoom: create a map at the given zoom level that covers
+   the precise geographical extent, at whatever pixel size is necessary:
+   
+   python compose.py -p BLUE_MARBLE -e 36.9 -123.5 38.9 -121.2 -z 9 out.jpg""")
 
 parser.add_option('-v', '--verbose', dest='verbose',
                   help='Make a bunch of noise',
                   action='store_true')
 
-parser.add_option('-o', '--out', dest='outfile',
-                  help='Write to output file')
-
-parser.add_option('-c', '--center', dest='centerzoom', nargs=3,
-                  help='Center (lat, lon) and zoom level', type='float',
-                  action='callback', callback=parseCenterZoom)
+parser.add_option('-c', '--center', dest='center', nargs=2,
+                  help='Center. lat, lon, e.g.: 37.804 -122.263', type='float',
+                  action='store')
 
 parser.add_option('-e', '--extent', dest='extent', nargs=4,
-                  help='Geographical extent (lat, lon pair)', type='float',
-                  action='callback', callback=parseExtent)
+                  help='Geographical extent. Two lat, lon pairs', type='float',
+                  action='store')
 
-parser.add_option('-p', '--provider', dest='provider',
-                  type='string', help='Map Provider, one of: MICROSOFT_ROAD, MICROSOFT_AERIAL, MICROSOFT_HYBRID, GOOGLE_ROAD, GOOGLE_AERIAL, GOOGLE_HYBRID, GOOGLE_TERRAIN, YAHOO_ROAD, YAHOO_AERIAL, YAHOO_HYBRID',
-                  action='callback', callback=parseProvider)
+parser.add_option('-z', '--zoom', dest='zoom',
+                  help='Zoom level', type='int',
+                  action='store')
 
 parser.add_option('-d', '--dimensions', dest='dimensions', nargs=2,
-                  help='Pixel dimensions (width, height) of resulting image', type='int',
-                  action='callback', callback=parseWidthHeight)
+                  help='Pixel dimensions of image', type='int',
+                  action='store')
+
+parser.add_option('-p', '--provider', dest='provider',
+                  type='choice', help='Map Provider, one of: ' + ', '.join(ModestMaps.builtinProviders.keys()),
+                  choices=ModestMaps.builtinProviders.keys(),
+                  action='store')
 
 if __name__ == '__main__':
 
     (options, args) = parser.parse_args()
+    
+    try:
+        try:
+            outfile = args[0]
+        except IndexError:
+            raise BadComposure('Error: Missing output file.')
+        
+        try:
+            provider = ModestMaps.builtinProviders[options.provider]()
+        except KeyError:
+            raise BadComposure('Error: bad provider "%s".' % options.provider)
+    
+        if options.center and options.extent:
+            raise BadComposure("Error: bad map coverage, center and extent can't both be set.")
+        
+        elif options.extent and options.dimensions and options.zoom:
+            raise BadComposure("Error: bad map coverage, dimensions and zoom can't be set together with extent.")
+        
+        elif options.center and options.zoom and options.dimensions:
+            lat, lon = options.center[0], options.center[1]
+            width, height = options.dimensions[0], options.dimensions[1]
+
+            dimensions = ModestMaps.Core.Point(width, height)
+            center = ModestMaps.Geo.Location(lat, lon)
+            zoom = options.zoom
+
+            map = ModestMaps.mapByCenterZoom(provider, center, zoom, dimensions)
+            
+        elif options.extent and options.dimensions:
+            latA, lonA = options.extent[0], options.extent[1]
+            latB, lonB = options.extent[2], options.extent[3]
+            width, height = options.dimensions[0], options.dimensions[1]
+
+            dimensions = ModestMaps.Core.Point(width, height)
+            locationA = ModestMaps.Geo.Location(latA, lonA)
+            locationB = ModestMaps.Geo.Location(latB, lonB)
+
+            map = ModestMaps.mapByExtent(provider, locationA, locationB, dimensions)
+    
+        elif options.extent and options.zoom:
+            latA, lonA = options.extent[0], options.extent[1]
+            latB, lonB = options.extent[2], options.extent[3]
+
+            locationA = ModestMaps.Geo.Location(latA, lonA)
+            locationB = ModestMaps.Geo.Location(latB, lonB)
+            zoom = options.zoom
+
+            map = ModestMaps.mapByExtentZoom(provider, locationA, locationB, zoom)
+    
+        else:
+            raise BadComposure("Error: not really sure what's going on.")
+
+    except BadComposure, e:
+        print >> sys.stderr, parser.usage
+        print >> sys.stderr, ''
+        print >> sys.stderr, '%s --help for possible options.' % __file__
+        print >> sys.stderr, ''
+        print >> sys.stderr, e
+        sys.exit(1)
 
     if options.verbose:
-        print parser.coord, parser.offset, '->', options.outfile, (parser.width, parser.height)
+        print map.coordinate, map.offset, '->', outfile, (map.dimensions.x, map.dimensions.y)
 
-    dim = ModestMaps.Core.Point(parser.width, parser.height)
-    map = ModestMaps.Map(parser.provider, dim, parser.coord, parser.offset)
-
-    map.draw(options.verbose).save(options.outfile)
+    map.draw(options.verbose).save(outfile)

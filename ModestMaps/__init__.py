@@ -5,6 +5,61 @@
 (370.724, 342.549)
 >>> m.pointLocation(p)
 (37.804, -122.263)
+
+>>> c = Geo.Location(37.804274, -122.262940)
+>>> z = 12
+>>> d = Core.Point(800, 600)
+>>> m = mapByCenterZoom(Microsoft.RoadProvider(), c, z, d)
+>>> m.dimensions
+(800.000, 600.000)
+>>> m.coordinate
+(1582.000, 656.000 @12.000)
+>>> m.offset
+(-235.000, -196.000)
+
+>>> sw = Geo.Location(36.893326, -123.533554)
+>>> ne = Geo.Location(38.864246, -121.208153)
+>>> d = Core.Point(800, 600)
+>>> m = mapByExtent(Microsoft.RoadProvider(), sw, ne, d)
+>>> m.dimensions
+(800.000, 600.000)
+>>> m.coordinate
+(98.000, 40.000 @8.000)
+>>> m.offset
+(-251.000, -218.000)
+
+>>> se = Geo.Location(36.893326, -121.208153)
+>>> nw = Geo.Location(38.864246, -123.533554)
+>>> d = Core.Point(1600, 1200)
+>>> m = mapByExtent(Microsoft.RoadProvider(), se, nw, d)
+>>> m.dimensions
+(1600.000, 1200.000)
+>>> m.coordinate
+(197.000, 81.000 @9.000)
+>>> m.offset
+(-246.000, -179.000)
+
+>>> sw = Geo.Location(36.893326, -123.533554)
+>>> ne = Geo.Location(38.864246, -121.208153)
+>>> z = 10
+>>> m = mapByExtentZoom(Microsoft.RoadProvider(), sw, ne, z)
+>>> m.dimensions
+(1693.000, 1818.000)
+>>> m.coordinate
+(395.000, 163.000 @10.000)
+>>> m.offset
+(-236.000, -108.000)
+
+>>> se = Geo.Location(36.893326, -121.208153)
+>>> nw = Geo.Location(38.864246, -123.533554)
+>>> z = 9
+>>> m = mapByExtentZoom(Microsoft.RoadProvider(), se, nw, z)
+>>> m.dimensions
+(846.000, 909.000)
+>>> m.coordinate
+(197.000, 81.000 @9.000)
+>>> m.offset
+(-246.000, -182.000)
 """
 
 import sys, PIL.Image, urllib, httplib, urlparse, StringIO, math, thread, time
@@ -16,12 +71,63 @@ import Geo
 import Google, Yahoo, Microsoft, BlueMarble, OpenStreetMap
 import time
 
-def calculateMapCenter(provider, centerCoord):
-    """ Based on a center coordinate, returns the coordinate
-        of an initial tile and its point placement, relative to
-        the map center.
-    """
+# a handy list of possible providers, which isn't
+# to say that you can't go writing your own.
+builtinProviders = {
+    'OPENSTREETMAP':    OpenStreetMap.Provider,
+    'OPEN_STREET_MAP':  OpenStreetMap.Provider,
+    'BLUE_MARBLE':      BlueMarble.Provider,
+    'MICROSOFT_ROAD':   Microsoft.RoadProvider,
+    'MICROSOFT_AERIAL': Microsoft.AerialProvider,
+    'MICROSOFT_HYBRID': Microsoft.HybridProvider,
+    'GOOGLE_ROAD':      Google.RoadProvider,
+    'GOOGLE_AERIAL':    Google.AerialProvider,
+    'GOOGLE_HYBRID':    Google.HybridProvider,
+    'GOOGLE_TERRAIN':   Google.TerrainProvider,
+    'YAHOO_ROAD':       Yahoo.RoadProvider,
+    'YAHOO_AERIAL':     Yahoo.AerialProvider,
+    'YAHOO_HYBRID':     Yahoo.HybridProvider
+    }
 
+def mapByCenterZoom(provider, center, zoom, dimensions):
+    """ Return map instance given a provider, center location, zoom value, and dimensions point.
+    """
+    centerCoord = provider.locationCoordinate(center).zoomTo(zoom)
+    mapCoord, mapOffset = calculateMapCenter(provider, centerCoord)
+
+    return Map(provider, dimensions, mapCoord, mapOffset)
+
+def mapByExtent(provider, locationA, locationB, dimensions):
+    """ Return map instance given a provider, two corner locations, and dimensions point.
+    """
+    mapCoord, mapOffset = calculateMapExtent(provider, dimensions.x, dimensions.y, locationA, locationB)
+
+    return Map(provider, dimensions, mapCoord, mapOffset)
+    
+def mapByExtentZoom(provider, locationA, locationB, zoom):
+    """ Return map instance given a provider, two corner locations, and zoom value.
+    """
+    # geographic center
+    center = Geo.Location((locationA.lat + locationB.lat) / 2,
+                          (locationA.lon + locationB.lon) / 2)
+    
+    # a coordinate per corner
+    coordA = provider.locationCoordinate(locationA).zoomTo(zoom)
+    coordB = provider.locationCoordinate(locationB).zoomTo(zoom)
+    
+    # precise width and height in pixels
+    width = abs(coordA.column - coordB.column) * provider.tileWidth()
+    height = abs(coordA.row - coordB.row) * provider.tileHeight()
+    
+    # nearest pixel actually
+    dimensions = Core.Point(int(width), int(height))
+    
+    return mapByCenterZoom(provider, center, zoom, dimensions)
+
+def calculateMapCenter(provider, centerCoord):
+    """ Based on a provider and center coordinate, returns the coordinate
+        of an initial tile and its point placement, relative to the map center.
+    """
     # initial tile coordinate
     initTileCoord = Core.Coordinate(math.floor(centerCoord.row), math.floor(centerCoord.column), math.floor(centerCoord.zoom))
 
@@ -33,7 +139,10 @@ def calculateMapCenter(provider, centerCoord):
     return initTileCoord, initPoint
 
 def calculateMapExtent(provider, width, height, *args):
-
+    """ Based on a provider, width & height values, and a list of locations,
+        returns the coordinate of an initial tile and its point placement,
+        relative to the map center.
+    """
     coordinates = map(provider.locationCoordinate, args)
     
     TL = Core.Coordinate(min([c.row for c in coordinates]),
@@ -119,7 +228,7 @@ class TileRequest:
         except:
                 
             if verbose:
-                print 'Failed', urls, '- attempt no.', attempt, 'in thread', thread.get_ident()
+                print 'Failed', urls, '- attempt no.', attempt, 'in thread', hex(thread.get_ident())
 
             if attempt < TileRequest.MAX_ATTEMPTS:
                 time.sleep(1 * attempt)
@@ -129,7 +238,7 @@ class TileRequest:
 
         else:
             if verbose:
-                print 'Received', urls, '- attempt no.', attempt, 'in thread', thread.get_ident()
+                print 'Received', urls, '- attempt no.', attempt, 'in thread', hex(thread.get_ident())
 
         if lock.acquire():
             self.imgs = imgs
