@@ -48,7 +48,7 @@
 >>> m.coordinate
 (395.000, 163.000 @10.000)
 >>> m.offset
-(-236.000, -108.000)
+(-236.000, -102.000)
 
 >>> se = Geo.Location(36.893326, -121.208153)
 >>> nw = Geo.Location(38.864246, -123.533554)
@@ -59,7 +59,7 @@
 >>> m.coordinate
 (197.000, 81.000 @9.000)
 >>> m.offset
-(-246.000, -182.000)
+(-246.000, -179.000)
 """
 
 import sys, PIL.Image, urllib, httplib, urlparse, StringIO, math, thread, time
@@ -107,14 +107,10 @@ def mapByExtent(provider, locationA, locationB, dimensions):
 def mapByExtentZoom(provider, locationA, locationB, zoom):
     """ Return map instance given a provider, two corner locations, and zoom value.
     """
-    # geographic center
-    center = Geo.Location((locationA.lat + locationB.lat) / 2,
-                          (locationA.lon + locationB.lon) / 2)
-    
     # a coordinate per corner
     coordA = provider.locationCoordinate(locationA).zoomTo(zoom)
     coordB = provider.locationCoordinate(locationB).zoomTo(zoom)
-    
+
     # precise width and height in pixels
     width = abs(coordA.column - coordB.column) * provider.tileWidth()
     height = abs(coordA.row - coordB.row) * provider.tileHeight()
@@ -122,14 +118,21 @@ def mapByExtentZoom(provider, locationA, locationB, zoom):
     # nearest pixel actually
     dimensions = Core.Point(int(width), int(height))
     
-    return mapByCenterZoom(provider, center, zoom, dimensions)
+    # projected center of the map
+    centerCoord = Core.Coordinate((coordA.row + coordB.row) / 2,
+                                  (coordA.column + coordB.column) / 2,
+                                  zoom)
+    
+    mapCoord, mapOffset = calculateMapCenter(provider, centerCoord)
+
+    return Map(provider, dimensions, mapCoord, mapOffset)
 
 def calculateMapCenter(provider, centerCoord):
     """ Based on a provider and center coordinate, returns the coordinate
         of an initial tile and its point placement, relative to the map center.
     """
     # initial tile coordinate
-    initTileCoord = Core.Coordinate(math.floor(centerCoord.row), math.floor(centerCoord.column), math.floor(centerCoord.zoom))
+    initTileCoord = centerCoord.container()
 
     # initial tile position, assuming centered tile well in grid
     initX = (initTileCoord.column - centerCoord.column) * provider.tileWidth()
