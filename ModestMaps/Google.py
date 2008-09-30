@@ -24,10 +24,10 @@ from Providers import IMapProvider
 
 import random, Tiles
 
-ROAD_VERSION = 'w2.80'
-AERIAL_VERSION = '30'
-HYBRID_VERSION = 'w2t.80'
-TERRAIN_VERSION = 'w2p.81'
+ROAD_VERSION = 'w2.83'
+AERIAL_VERSION = '32'
+HYBRID_VERSION = 'w2t.83'
+TERRAIN_VERSION = 'app.81'
 
 class AbstractProvider(IMapProvider):
     def __init__(self):
@@ -37,7 +37,7 @@ class AbstractProvider(IMapProvider):
         self.projection = MercatorProjection(26, t)
 
     def getZoomString(self, coordinate):
-        raise NotImplementedError()
+        return 'x=%d&y=%d&zoom=%d' % Tiles.toGoogleRoad(int(coordinate.column), int(coordinate.row), int(coordinate.zoom))
 
     def tileWidth(self):
         return 256
@@ -47,27 +47,25 @@ class AbstractProvider(IMapProvider):
 
 class RoadProvider(AbstractProvider):
     def getTileUrls(self, coordinate):
-        return ('http://mt%d.google.com/mt?n=404&v=%s&%s' % (random.randint(0, 3), ROAD_VERSION, self.getZoomString(self.sourceCoordinate(coordinate))),)
-        
-    def getZoomString(self, coordinate):
-        return 'x=%d&y=%d&zoom=%d' % Tiles.toGoogleRoad(int(coordinate.column), int(coordinate.row), int(coordinate.zoom))
+        # http://mt1.google.com/mt?v=w2.83&hl=en&x=10513&s=&y=25304&z=16&s=Gal
+        return ('http://mt%d.google.com/mt?v=%s&hl=en&%s' % (random.randint(0, 3), ROAD_VERSION, self.getZoomString(self.sourceCoordinate(coordinate))),)
 
 class AerialProvider(AbstractProvider):
     def getTileUrls(self, coordinate):
-        return ('http://kh%d.google.com/kh?n=404&v=%s&t=%s' % (random.randint(0, 3), AERIAL_VERSION, self.getZoomString(self.sourceCoordinate(coordinate))),)
-
-    def getZoomString(self, coordinate):
-        return Tiles.toGoogleAerial(int(coordinate.column), int(coordinate.row), int(coordinate.zoom))
+        # http://khm1.google.com/kh?v=32&hl=en&x=10513&s=&y=25304&z=16&s=Gal
+        return ('http://khm%d.google.com/kh?v=%s&hl=en&%s' % (random.randint(0, 3), AERIAL_VERSION, self.getZoomString(self.sourceCoordinate(coordinate))),)
 
 class HybridProvider(AbstractProvider):
     def getTileUrls(self, coordinate):
+        # http://mt0.google.com/mt?v=w2t.83&hl=en&x=10510&s=&y=25303&z=16&s=G
         under = AerialProvider().getTileUrls(coordinate)[0]
-        over = 'http://mt%d.google.com/mt?n=404&v=%s&%s' % (random.randint(0, 3), HYBRID_VERSION, RoadProvider().getZoomString(self.sourceCoordinate(coordinate)))
+        over = 'http://mt%d.google.com/mt?v=%s&hl=en&%s' % (random.randint(0, 3), HYBRID_VERSION, self.getZoomString(self.sourceCoordinate(coordinate)))
         return (under, over)
 
 class TerrainProvider(RoadProvider):
     def getTileUrls(self, coordinate):
-        return ('http://mt%d.google.com/mt?n=404&v=%s&%s' % (random.randint(0, 3), TERRAIN_VERSION, self.getZoomString(self.sourceCoordinate(coordinate))),)
+        # http://mt1.google.com/mt?v=app.81&hl=en&x=5255&s=&y=12651&z=15&s=
+        return ('http://mt%d.google.com/mt?v=%s&hl=en&%s' % (random.randint(0, 3), TERRAIN_VERSION, self.getZoomString(self.sourceCoordinate(coordinate))),)
 
 if __name__ == '__main__':
     import doctest
