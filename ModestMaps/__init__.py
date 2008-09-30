@@ -222,7 +222,7 @@ class TileRequest:
         
             for (scheme, netloc, path, params, query, fragment) in map(urlparse.urlparse, urls):
                 conn = httplib.HTTPConnection(netloc)
-                conn.request('GET', path + ('?' + query).rstrip('?'))
+                conn.request('GET', path + ('?' + query).rstrip('?'), headers={'User-Agent': 'Modest Maps python branch (http://modestmaps.com)'})
                 response = conn.getresponse()
                 
                 if str(response.status).startswith('2'):
