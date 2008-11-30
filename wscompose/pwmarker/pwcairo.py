@@ -10,8 +10,7 @@ import array
 import math
 import random
 import cairo
-import Image
-import ImageDraw
+import PIL.Image
 
 # http://www.cairographics.org/pycairo/tutorial/
 # http://www.tortall.net/mu/wiki/CairoTutorial
@@ -429,4 +428,4 @@ class CairoMarker :
         width = surface.get_width()
         height = surface.get_height()
         
-        return Image.frombuffer(mode, (width, height), surface.get_data(), "raw", mode, 0, 1)
+        return PIL.Image.frombuffer(mode, (width, height), surface.get_data(), "raw", mode, 0, 1)

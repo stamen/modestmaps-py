@@ -8,9 +8,9 @@ __license__    = "http://www.modestmaps.com/license.txt"
 
 import math
 
-import Image
-import ImageDraw
-import ImageFilter
+import PIL.Image
+import PIL.ImageDraw
+import PIL.ImageFilter
 
 class PILMarker :
 
@@ -56,7 +56,7 @@ class PILMarker :
         
         w += 1
         
-        im = Image.new('RGBA', (w, h))
+        im = PIL.Image.new('RGBA', (w, h))
         
         coords = self.p__coords()
         return self.p__draw_pinwin(im, coords, dot_ctx, fill)
@@ -65,7 +65,7 @@ class PILMarker :
 
     def p__draw_pinwin (self, im, coords, dot_ctx='pinwin', fill='white') :
 
-        dr = ImageDraw.Draw(im)
+        dr = PIL.ImageDraw.Draw(im)
         
         if self.add_dot and (dot_ctx != 'shadow' and dot_ctx != 'mask-shadow') :
             self.dot(dot_ctx, dr)
@@ -124,7 +124,7 @@ class PILMarker :
         w = self.offset + self.img_w + (self.padding * 2)
         h = self.offset + self.img_h + (self.padding * 2)
         
-        cnv = Image.new('RGBA', (w, h))
+        cnv = PIL.Image.new('RGBA', (w, h))
         coords = self.p__cartoon_shadow_coords()
 
         blur = False
@@ -139,10 +139,10 @@ class PILMarker :
         (bottom_x, bottom_y) = coords[2]
         (sha_right, cnv_h) = coords[3]
                 
-        sh = Image.new('RGBA', (w, h))
+        sh = PIL.Image.new('RGBA', (w, h))
         sh.paste(cnv, (sh_offset, 0), cnv)
         
-        dr = ImageDraw.Draw(sh)
+        dr = PIL.ImageDraw.Draw(sh)
                 
         anchor = [
             (sha_left, cnv_h),
@@ -301,7 +301,7 @@ class PILMarker :
         
         data = (a, b, c, d, e, f, g, h)
 
-        return pil_im.transform ((iw2,ih2), Image.PERSPECTIVE, data, Image.BILINEAR)
+        return pil_im.transform ((iw2,ih2), PIL.Image.PERSPECTIVE, data, PIL.Image.BILINEAR)
 
     #
     
@@ -315,13 +315,13 @@ class PILMarker :
         
         h+= 20
         
-        im = Image.new('RGBA', (w, h))
-        dr = ImageDraw.Draw(im)
+        im = PIL.Image.new('RGBA', (w, h))
+        dr = PIL.ImageDraw.Draw(im)
 
         im.paste(pil_im, (0, 10), pil_im)
         
         for i in range(1, iterations) :
-            im = im.filter(ImageFilter.BLUR)
+            im = im.filter(PIL.ImageFilter.BLUR)
 
         return im    
 
@@ -331,7 +331,7 @@ class PILMarker :
 
         scale = 4
         sz = im.size
-        im = im.resize((sz[0] * scale, sz[1] * scale),  Image.NEAREST)
-        im = im.resize(sz, Image.ANTIALIAS)
+        im = im.resize((sz[0] * scale, sz[1] * scale),  PIL.Image.NEAREST)
+        im = im.resize(sz, PIL.Image.ANTIALIAS)
 
         return im

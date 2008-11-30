@@ -8,8 +8,8 @@ __license__    = "http://www.modestmaps.com/license.txt"
 
 import math
 
-import Image
-import ImageDraw
+import PIL.Image
+import PIL.ImageDraw
 
 class Common :
 
@@ -120,8 +120,8 @@ class Common :
             w = pww
             h = pwh
 
-        im = Image.new('L', (w, h))
-        dr = ImageDraw.Draw(im)
+        im = PIL.Image.new('L', (w, h))
+        dr = PIL.ImageDraw.Draw(im)
 
         if ctx != 'pinwin' : 
             shx = 3
@@ -314,8 +314,8 @@ class Common :
         w = max(pww, shw)
         h = max(pwh, shh)
 
-        im = Image.new('RGBA', (w, h))
-        dr = ImageDraw.Draw(im)
+        im = PIL.Image.new('RGBA', (w, h))
+        dr = PIL.ImageDraw.Draw(im)
 
         shx = 3
         shy = h - shh
@@ -342,8 +342,8 @@ class Common :
 
 	(w, h) = pw.size
         
-        im = Image.new('RGBA', (w, h))
-        dr = ImageDraw.Draw(im)
+        im = PIL.Image.new('RGBA', (w, h))
+        dr = PIL.ImageDraw.Draw(im)
 
         im.paste(pw, (1, 1), pw)
         im.putalpha(mask)
