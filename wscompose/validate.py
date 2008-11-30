@@ -20,7 +20,7 @@ class validate :
             'adjust' : re.compile(r"^(\d+(?:\.\d*)?|\d*?\.\d+)$"),
             'num' : re.compile(r"^\d+$"),
             'provider' : re.compile(r"^(\w+)$"),
-            'label' : re.compile(r"^(?:[a-z0-9-_]+)$"),
+            'label' : re.compile(r"^(?:[a-z0-9-_\.]+)$"),
             'hull' : re.compile(r"^(marker|dot|plot)$")   
             }
 
@@ -204,7 +204,7 @@ class validate :
                 except Exception, e :
                     raise Exception, e
 
-                if parts[1] == '' :
+                if parts[1] == '' and parts[0] != 'file' :
                     raise Exception, "Unknown URL"
                 
                 marker_data['fill'] = details[5]
@@ -346,7 +346,7 @@ class validate :
         valid = []
 
         for label in hulls :
-
+            
             if not self.regexp('hull', label)  :
                 raise Exception, "Unknown marker type for convex hulls"
 
