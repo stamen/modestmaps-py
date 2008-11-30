@@ -17,7 +17,6 @@ from math import sin, cos, acos, radians, degrees
 import tempfile
 import textwrap
 import string
-import Image
 import StringIO
 import types
 
@@ -112,40 +111,35 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
         #
 
         provider = self.load_provider(self.ctx['provider'])
+
+        sw = ModestMaps.Geo.Location(self.ctx['bbox'][0], self.ctx['bbox'][1])
+        ne = ModestMaps.Geo.Location(self.ctx['bbox'][2], self.ctx['bbox'][3])
+        dims = ModestMaps.Core.Point(self.ctx['width'], self.ctx['height']);
         
+        self.ctx['map'] = ModestMaps.mapByExtent(provider, sw, ne, dims)
+
         coord, offset = ModestMaps.calculateMapExtent(provider,
                                                       self.ctx['width'], self.ctx['height'],
                                                       ModestMaps.Geo.Location(self.ctx['bbox'][0], self.ctx['bbox'][1]),
                                                       ModestMaps.Geo.Location(self.ctx['bbox'][2], self.ctx['bbox'][3]))
-
-        dim = ModestMaps.Core.Point(self.ctx['width'], self.ctx['height'])
-        map = ModestMaps.Map(provider, dim, coord, offset)            
         
         self.ctx['zoom'] = coord.zoom
-        self.ctx['map'] = map
 
-        return map.draw()
-    
+        return self.ctx['map'].draw()
+        
     # ##########################################################
     
     def draw_map_centered (self) :
         
-        provider = self.load_provider(self.ctx['provider'])
-        loc = ModestMaps.Geo.Location(self.ctx['latitude'], self.ctx['longitude'])
-        
-        coordinate = provider.locationCoordinate(loc)            
-        coordinate = coordinate.zoomTo(self.ctx['zoom'])
-        
-        coord, offset = ModestMaps.calculateMapCenter(provider, coordinate)
-        dim = ModestMaps.Core.Point(self.ctx['width'], self.ctx['height'])
-        
-        map = ModestMaps.Map(provider, dim, coord, offset)            
-        
-        self.ctx['zoom'] = coord.zoom
-        self.ctx['map'] = map
+        provider = self.load_provider(self.ctx['provider'])    
 
-        return map.draw()
-                
+        loc = ModestMaps.Geo.Location(self.ctx['latitude'], self.ctx['longitude'])
+        dim = ModestMaps.Core.Point(self.ctx['width'], self.ctx['height'])
+        zoom = self.ctx['zoom']
+
+        self.ctx['map'] = ModestMaps.mapByCenterZoom(provider, loc, zoom, dim)
+        return self.ctx['map'].draw()
+        
     # ##########################################################
 
     def draw_map_bbox (self) :
@@ -156,25 +150,14 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
         #
 
         provider = self.load_provider(self.ctx['provider'])
-        
-        offset_lat = (self.ctx['bbox'][2] - self.ctx['bbox'][0]) / 2
-        offset_lon = (self.ctx['bbox'][3] - self.ctx['bbox'][1]) / 2
 
-        lat = self.ctx['bbox'][0] + offset_lat
-        lon = self.ctx['bbox'][1] + offset_lon
-        
-        loc = ModestMaps.Geo.Location(lat, lon)
-        coordinate = provider.locationCoordinate(loc)            
-        coordinate = coordinate.zoomTo(self.ctx['zoom'])
-        
-        coord, offset = ModestMaps.calculateMapCenter(provider, coordinate)
-        dim = ModestMaps.Core.Point(0, 0)
-        
-        map = ModestMaps.Map(provider, dim, coord, offset)            
+        sw = ModestMaps.Geo.Location(self.ctx['bbox'][0], self.ctx['bbox'][1])
+        ne = ModestMaps.Geo.Location(self.ctx['bbox'][2], self.ctx['bbox'][3])
+        zoom = self.ctx['zoom']
 
-        self.ctx['map'] = map
-        return map.draw_bbox(self.ctx['bbox'], self.ctx['zoom'])
-
+        self.ctx['map'] = ModestMaps.mapByExtentZoom(provider, sw, ne, zoom)
+        return self.ctx['map'].draw()
+        
     # ##########################################################
     
     def __adjust_bbox (self, bbox, adjust) :
@@ -222,7 +205,7 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
             return self.send_map_as_json(img)
 
         #
-        
+
         fh = StringIO.StringIO()
         img.save(fh, "PNG")
         
