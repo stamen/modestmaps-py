@@ -14,8 +14,6 @@ import random
 import re
 
 import ModestMaps
-import Image
-import ImageDraw
 
 # SEE COMMENTS IN markers.py ABOUT VARIABLE NAMES
 #
@@ -103,7 +101,7 @@ class handler (wscompose.handler) :
 
     # ##########################################################
     
-    def __reposition_markers (self, iterations=1, max_iterations=25) :
+    def __reposition_markers (self, iterations=1, max_iterations=50) :
 
         # get some context
         self.reload_markers()
@@ -265,6 +263,7 @@ class handler (wscompose.handler) :
         #
 
         shadow = mrk.fh('shadow')
+
         img.paste(shadow, (mx, my), shadow)
         
         mrk_data['x_fill'] = dx
