@@ -316,15 +316,6 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
         elif value == 'MICROSOFT_HYBRID':
             return ModestMaps.Microsoft.HybridProvider()
         
-        elif value == 'GOOGLE_ROAD':
-            return ModestMaps.Google.RoadProvider()
-        
-        elif value == 'GOOGLE_AERIAL':
-            return ModestMaps.Google.AerialProvider()
-        
-        elif value == 'GOOGLE_HYBRID':
-            return ModestMaps.Google.HybridProvider()
-        
         elif value == 'YAHOO_ROAD':
             return ModestMaps.Yahoo.RoadProvider()
         
@@ -574,7 +565,7 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
     
     def help_example (self) :
         self.help_header("Example")
-        self.help_para("http://127.0.0.1:9999/?provider=GOOGLE_ROAD&latitude=41.904688&longitude=12.494308&zoom=17&height=500&width=500")
+        self.help_para("http://127.0.0.1:9999/?provider=MICROSOFT_ROAD&latitude=41.904688&longitude=12.494308&zoom=17&height=500&width=500")
         self.help_para("Returns a PNG file of a map centered on the Santa Maria della Vittoria, in Rome.")
         
     # ##########################################################

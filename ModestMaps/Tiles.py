@@ -17,34 +17,6 @@
 >>> fromBinaryString('1001')
 9
 
->>> fromGoogleRoad(0, 0, 16)
-(0, 0, 1)
->>> fromGoogleRoad(10507, 25322, 1)
-(10507, 25322, 16)
->>> fromGoogleRoad(10482, 25333, 1)
-(10482, 25333, 16)
-
->>> toGoogleRoad(0, 0, 1)
-(0, 0, 16)
->>> toGoogleRoad(10507, 25322, 16)
-(10507, 25322, 1)
->>> toGoogleRoad(10482, 25333, 16)
-(10482, 25333, 1)
-
->>> fromGoogleAerial('tq')
-(0, 0, 1)
->>> fromGoogleAerial('tqtsqrqtrtttqsqsr')
-(10507, 25322, 16)
->>> fromGoogleAerial('tqtsqrqtqssssqtrt')
-(10482, 25333, 16)
-
->>> toGoogleAerial(0, 0, 1)
-'tq'
->>> toGoogleAerial(10507, 25322, 16)
-'tqtsqrqtrtttqsqsr'
->>> toGoogleAerial(10482, 25333, 16)
-'tqtsqrqtqssssqtrt'
-
 >>> fromYahooRoad(0, 0, 17)
 (0, 0, 1)
 >>> fromYahooRoad(10507, 7445, 2)
@@ -125,43 +97,6 @@ def fromBinaryString(s):
         e += 1
         s.pop()
     return i
-
-def fromGoogleRoad(x, y, z):
-    """ Return column, row, zoom for Google Road tile x, y, z.
-    """
-    col = x
-    row = y
-    zoom = 17 - z
-    return col, row, zoom
-
-def toGoogleRoad(col, row, zoom):
-    """ Return x, y, z for Google Road tile column, row, zoom.
-    """
-    x = col
-    y = row
-    z = 17 - zoom
-    return col, row, z
-
-googleFromCorners = {'t': '00', 's': '01', 'q': '10', 'r': '11'}
-googleToCorners = {'00': 't', '01': 's', '10': 'q', '11': 'r'}
-
-def fromGoogleAerial(s):
-    """ Return column, row, zoom for Google Aerial tile string.
-    """
-    row, col = map(fromBinaryString, zip(*[list(googleFromCorners[c]) for c in s]))
-    zoom = len(s) - 1
-    row = int(math.pow(2, zoom) - row - 1)
-    return col, row, zoom
-
-def toGoogleAerial(col, row, zoom):
-    """ Return string for Google Road tile column, row, zoom.
-    """
-    x = col
-    y = int(math.pow(2, zoom) - row - 1)
-    z = zoom + 1
-    y, x = toBinaryString(y).rjust(z, '0'), toBinaryString(x).rjust(z, '0')
-    string = ''.join([googleToCorners[y[c]+x[c]] for c in range(z)])
-    return string
 
 def fromYahoo(x, y, z):
     """ Return column, row, zoom for Yahoo x, y, z.

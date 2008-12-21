@@ -68,7 +68,7 @@ import Tiles
 import Providers
 import Core
 import Geo
-import Google, Yahoo, Microsoft, BlueMarble, OpenStreetMap
+import Yahoo, Microsoft, BlueMarble, OpenStreetMap
 import time
 
 # a handy list of possible providers, which isn't
@@ -80,10 +80,6 @@ builtinProviders = {
     'MICROSOFT_ROAD':   Microsoft.RoadProvider,
     'MICROSOFT_AERIAL': Microsoft.AerialProvider,
     'MICROSOFT_HYBRID': Microsoft.HybridProvider,
-    'GOOGLE_ROAD':      Google.RoadProvider,
-    'GOOGLE_AERIAL':    Google.AerialProvider,
-    'GOOGLE_HYBRID':    Google.HybridProvider,
-    'GOOGLE_TERRAIN':   Google.TerrainProvider,
     'YAHOO_ROAD':       Yahoo.RoadProvider,
     'YAHOO_AERIAL':     Yahoo.AerialProvider,
     'YAHOO_HYBRID':     Yahoo.HybridProvider

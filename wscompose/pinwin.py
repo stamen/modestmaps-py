@@ -431,7 +431,7 @@ class handler (wscompose.plotting.handler, wscompose.dithering.handler) :
         
         if params.has_key('fill') :
 
-            re_provider = re.compile(r"^(GOOGLE|YAHOO|MICROSOFT)_(ROAD|HYBRID|AERIAL)$")
+            re_provider = re.compile(r"^(YAHOO|MICROSOFT)_(ROAD|HYBRID|AERIAL)$")
             re_num = re.compile(r"^\d+$")
                 
             if not re_provider.match(params['fill'][0].upper()) :
