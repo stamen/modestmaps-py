@@ -49,6 +49,10 @@ parser.add_option('-p', '--provider', dest='provider',
                   choices=ModestMaps.builtinProviders.keys(),
                   action='store')
 
+parser.add_option('-k', '--apikey', dest='apikey',
+                  help='API key for map providers that need one, e.g. CloudMade', type='str',
+                  action='store')
+
 if __name__ == '__main__':
 
     (options, args) = parser.parse_args()
@@ -60,7 +64,10 @@ if __name__ == '__main__':
             raise BadComposure('Error: Missing output file.')
         
         try:
-            provider = ModestMaps.builtinProviders[options.provider]()
+            if options.provider.startswith('CLOUDMADE_'):
+                provider = ModestMaps.builtinProviders[options.provider](options.apikey)
+            else:
+                provider = ModestMaps.builtinProviders[options.provider]()
         except KeyError:
             raise BadComposure('Error: bad provider "%s".' % options.provider)
     

@@ -68,7 +68,7 @@ import Tiles
 import Providers
 import Core
 import Geo
-import Yahoo, Microsoft, BlueMarble, OpenStreetMap
+import Yahoo, Microsoft, BlueMarble, OpenStreetMap, CloudMade
 import time
 
 # a handy list of possible providers, which isn't
@@ -82,7 +82,13 @@ builtinProviders = {
     'MICROSOFT_HYBRID': Microsoft.HybridProvider,
     'YAHOO_ROAD':       Yahoo.RoadProvider,
     'YAHOO_AERIAL':     Yahoo.AerialProvider,
-    'YAHOO_HYBRID':     Yahoo.HybridProvider
+    'YAHOO_HYBRID':     Yahoo.HybridProvider,
+    'CLOUDMADE_ORIGINAL': CloudMade.OriginalProvider,
+    'CLOUDMADE_FINELINE': CloudMade.FineLineProvider,
+    'CLOUDMADE_TOURIST': CloudMade.TouristProvider,
+    'CLOUDMADE_FRESH':  CloudMade.FreshProvider,
+    'CLOUDMADE_PALEDAWN': CloudMade.PaleDawnProvider,
+    'CLOUDMADE_MIDNIGHTCOMMANDER': CloudMade.MidnightCommanderProvider
     }
 
 def mapByCenterZoom(provider, center, zoom, dimensions):
