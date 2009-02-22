@@ -22,6 +22,10 @@
 >>> p = MidnightCommanderProvider('example')
 >>> p.getTileUrls(Coordinate(25322, 10507, 16)) #doctest: +ELLIPSIS
 ('http://tile.cloudmade.com/example/999/256/16/10507/25322.png',)
+
+>>> p = BaseProvider('example', 510)
+>>> p.getTileUrls(Coordinate(25322, 10507, 16)) #doctest: +ELLIPSIS
+('http://tile.cloudmade.com/example/510/256/16/10507/25322.png',)
 """
 
 from Core import Coordinate
@@ -30,14 +34,17 @@ from Providers import IMapProvider
 
 import random, Tiles
 
-class AbstractProvider(IMapProvider):
-    def __init__(self, apikey):
+class BaseProvider(IMapProvider):
+    def __init__(self, apikey, style=None):
         t = Transformation(1.068070779e7, 0, 3.355443185e7,
 		                   0, -1.068070890e7, 3.355443057e7)
 
         self.projection = MercatorProjection(26, t)
         
         self.key = apikey
+        
+        if style:
+            self.style = style
 
     def tileWidth(self):
         return 256
@@ -49,22 +56,22 @@ class AbstractProvider(IMapProvider):
         zoom, column, row = coordinate.zoom, coordinate.column, coordinate.row
         return ('http://tile.cloudmade.com/%s/%d/256/%d/%d/%d.png' % (self.key, self.style, zoom, column, row),)
 
-class OriginalProvider(AbstractProvider):
+class OriginalProvider(BaseProvider):
     style = 1
 
-class FineLineProvider(AbstractProvider):
+class FineLineProvider(BaseProvider):
     style = 2
 
-class TouristProvider(AbstractProvider):
+class TouristProvider(BaseProvider):
     style = 7
 
-class FreshProvider(AbstractProvider):
+class FreshProvider(BaseProvider):
     style = 997
 
-class PaleDawnProvider(AbstractProvider):
+class PaleDawnProvider(BaseProvider):
     style = 998
 
-class MidnightCommanderProvider(AbstractProvider):
+class MidnightCommanderProvider(BaseProvider):
     style = 999
 
 if __name__ == '__main__':
