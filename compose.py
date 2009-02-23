@@ -65,6 +65,9 @@ if __name__ == '__main__':
         
         try:
             if options.provider.startswith('CLOUDMADE_'):
+                if not options.apikey:
+                    raise BadComposure("Error: Cloudmade provider requires an API key. Register at http://developers.cloudmade.com/")
+
                 provider = ModestMaps.builtinProviders[options.provider](options.apikey)
             else:
                 provider = ModestMaps.builtinProviders[options.provider]()
