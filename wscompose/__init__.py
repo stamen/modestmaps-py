@@ -305,32 +305,8 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
     
     def load_provider (self, value) :
 
-        # Please for this method to be in MM itself...
-        
-        if value == 'MICROSOFT_ROAD':
-            return ModestMaps.Microsoft.RoadProvider()
-        
-        elif value == 'MICROSOFT_AERIAL':
-            return ModestMaps.Microsoft.AerialProvider()
-        
-        elif value == 'MICROSOFT_HYBRID':
-            return ModestMaps.Microsoft.HybridProvider()
-        
-        elif value == 'YAHOO_ROAD':
-            return ModestMaps.Yahoo.RoadProvider()
-        
-        elif value == 'YAHOO_AERIAL':
-            return ModestMaps.Yahoo.AerialProvider()
-        
-        elif value == 'YAHOO_HYBRID':
-            return ModestMaps.Yahoo.HybridProvider()
-        
-        elif value == 'BLUE_MARBLE':
-            return ModestMaps.BlueMarble.Provider()
-        
-        elif value == 'OPEN_STREET_MAP':
-            return ModestMaps.OpenStreetMap.Provider()
-
+	if value in ModestMaps.builtinProviders:
+	    return ModestMaps.builtinProviders[value]()
         else :
             return None
             
