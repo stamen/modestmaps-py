@@ -233,8 +233,9 @@ class handler (wscompose.plotting.handler, wscompose.dithering.handler) :
             
         #
 
-        for data in self.ctx['markers'] :
-            self.draw_shadow(img, data, bleed_x, bleed_y)
+        if self.ctx['shadows'] :
+            for data in self.ctx['markers'] :
+                self.draw_shadow(img, data, bleed_x, bleed_y)
         
         for data in self.ctx['markers'] :
             self.draw_marker(img, data, bleed_x, bleed_y)
@@ -269,7 +270,19 @@ class handler (wscompose.plotting.handler, wscompose.dithering.handler) :
         #
 
         top = my
-        right = (mx + mrk_sz[0]) - img.size[0]        
+        right = 0
+
+        if self.ctx['shadows'] :
+            right = (mx + mrk_sz[0]) - img.size[0]
+        else :
+            
+            im_w = img.size[0]
+            test = mrk_data['x']  + (mrk.canvas_w - int(mrk.pt_x))
+            
+            if test > im_w :
+                right = test - im_w
+
+        #
         
         left = mx
         bottom = my + mrk_sz[1] - img.size[1]
@@ -503,6 +516,15 @@ class handler (wscompose.plotting.handler, wscompose.dithering.handler) :
             except Exception, e :
                 self.error(143, e)
                 return False
+
+        #
+        # shadows
+        #
+
+        if params.has_key('noshadow') :
+            valid['shadows'] = False
+        else :
+            valid['shadows'] = True
             
         #
         # Happy happy
@@ -545,7 +567,8 @@ class handler (wscompose.plotting.handler, wscompose.dithering.handler) :
         
         self.help_option('adjust', 'Adjust the size of the bounding box argument by (n) kilometers; you may want to do this if you have markers positioned close to the sides of your bounding box', False)
         self.help_option('bleed', 'If true, the final image will be enlarged to ensure that all marker canvases are not clipped', False)
-
+        self.help_option('noshadow', 'Do not draw shadows for pinwin markers', False)
+        
         self.help_option('filter', 'Filter the map image before any markers are applied. Valid options are :', False)
         self.help_option('atkinson', 'Apply the Atkinson dithering algorithm to the map image', False, 1)        
 
