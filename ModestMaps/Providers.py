@@ -42,6 +42,9 @@ class IMapProvider:
         return Coordinate(coordinate.row, wrappedColumn, coordinate.zoom)
 
 class TemplatedMercatorProvider(IMapProvider):
+    """ Convert URI templates into tile URLs, using a tileUrlTemplate identical to:
+        http://code.google.com/apis/maps/documentation/overlays.html#Custom_Map_Types
+    """
     def __init__(self, template):
         t = Transformation(1.068070779e7, 0, 3.355443185e7,
 		                   0, -1.068070890e7, 3.355443057e7)
