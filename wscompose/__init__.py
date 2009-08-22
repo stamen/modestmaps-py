@@ -305,7 +305,9 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
     
     def load_provider (self, value) :
 
-	if value in ModestMaps.builtinProviders:
+	if value.startswith('http://'):
+	    return ModestMaps.Providers.TemplatedMercatorProvider(value)
+        elif value in ModestMaps.builtinProviders:
 	    return ModestMaps.builtinProviders[value]()
         else :
             return None

@@ -98,6 +98,10 @@ class validate :
 
     def provider (self, input) :
 
+        if input.startswith('http://'):
+            # probably a URI template thing, let it slide
+            return input
+        
         input = input.upper()
 
         if not self.regexp('provider', input) :

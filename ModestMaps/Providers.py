@@ -40,3 +40,21 @@ class IMapProvider:
             wrappedColumn += math.pow(2, coordinate.zoom)
             
         return Coordinate(coordinate.row, wrappedColumn, coordinate.zoom)
+
+class TemplatedMercatorProvider(IMapProvider):
+    def __init__(self, template):
+        t = Transformation(1.068070779e7, 0, 3.355443185e7,
+		                   0, -1.068070890e7, 3.355443057e7)
+
+        self.projection = MercatorProjection(26, t)
+        self.template = template
+
+    def tileWidth(self):
+        return 256
+
+    def tileHeight(self):
+        return 256
+
+    def getTileUrls(self, coordinate):
+        x, y, z = str(int(coordinate.column)), str(int(coordinate.row)), str(int(coordinate.zoom))
+        return (self.template.replace('{X}', x).replace('{Y}', y).replace('{Z}', z),)
