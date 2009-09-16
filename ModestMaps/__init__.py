@@ -62,7 +62,21 @@
 (-246.000, -179.000)
 """
 
-import sys, PIL.Image, urllib, httplib, urlparse, StringIO, math, thread, time
+import sys
+import urllib
+import httplib
+import urlparse
+import StringIO
+import math
+import thread
+import time
+
+try:
+    import PIL.Image
+except ImportError:
+    # you need PIL to do any actual drawing, but
+    # maybe that's not what you're using MMaps for?
+    pass
 
 import Tiles
 import Providers
