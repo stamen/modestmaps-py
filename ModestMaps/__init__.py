@@ -1,4 +1,5 @@
 """
+
 >>> m = Map(Microsoft.RoadProvider(), Core.Point(600, 600), Core.Coordinate(3165, 1313, 13), Core.Point(-144, -94))
 >>> p = m.locationPoint(Geo.Location(37.804274, -122.262940))
 >>> p
