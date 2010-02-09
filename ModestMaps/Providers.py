@@ -1,6 +1,7 @@
 from Core import Coordinate
 from Geo import LinearProjection, MercatorProjection, Transformation
 
+import re
 import math
 
 ids = ('MICROSOFT_ROAD', 'MICROSOFT_AERIAL', 'MICROSOFT_HYBRID',
@@ -50,7 +51,18 @@ class TemplatedMercatorProvider(IMapProvider):
 		                   0, -1.068070890e7, 3.355443057e7)
 
         self.projection = MercatorProjection(26, t)
-        self.template = template
+        
+        self.templates = []
+        
+        while template:
+            match = re.match(r'^(http://\S+?)(,http://\S+)?$', template)
+            first = match.group(1)
+            
+            if match:
+                self.templates.append(first)
+                template = template[len(first):].lstrip(',')
+            else:
+                break
 
     def tileWidth(self):
         return 256
@@ -60,4 +72,4 @@ class TemplatedMercatorProvider(IMapProvider):
 
     def getTileUrls(self, coordinate):
         x, y, z = str(int(coordinate.column)), str(int(coordinate.row)), str(int(coordinate.zoom))
-        return (self.template.replace('{X}', x).replace('{Y}', y).replace('{Z}', z),)
+        return [t.replace('{X}', x).replace('{Y}', y).replace('{Z}', z) for t in self.templates]
