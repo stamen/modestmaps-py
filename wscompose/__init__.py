@@ -205,12 +205,14 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
             return self.send_map_as_json(img)
 
         #
-
+        
+        format = self.ctx.get('output', 'png')
+        
         fh = StringIO.StringIO()
-        img.save(fh, "PNG")
+        img.save(fh, format.upper())
         
         self.send_response(200, "OK")
-        self.send_header("Content-Type", "image/png")
+        self.send_header("Content-Type", "image/%(format)s" % locals())
         self.send_header("Content-Length", fh.len)         
 
         self.send_x_headers(img)
@@ -496,9 +498,8 @@ class handler(BaseHTTPServer.BaseHTTPRequestHandler):
 
                 valid['output'] = 'json'
 
-            elif out == 'png' :
-                #  set above
-                pass
+            elif out in ('png', 'jpeg') :
+                valid['output'] = out     
             
             else :
                 self.error(144, 'Not a valid output format')
