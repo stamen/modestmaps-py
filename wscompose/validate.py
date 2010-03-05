@@ -1,6 +1,5 @@
 # -*-python-*-
 
-__package__    = "wscompose/validate.py"
 __version__    = "1.1"
 __author__     = "Aaron Straup Cope"
 __url__        = "http://www.aaronland.info/python/wscompose"
