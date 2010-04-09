@@ -9,5 +9,5 @@ setup(name='ModestMaps',
       url='http://modestmaps.com',
       requires=['PIL'],
       packages=['ModestMaps'],
-      download_url='http://modestmaps.com/download/ModestMaps-Py-1.0-dist.tar.gz',
+      download_url='http://modestmaps.com/dist/ModestMaps-Py-1.0.tar.gz',
       license='BSD')
