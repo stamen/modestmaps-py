@@ -1,4 +1,4 @@
-"""
+﻿"""
 >>> p = RoadProvider()
 >>> p.getTileUrls(Coordinate(25322, 10507, 16)) #doctest: +ELLIPSIS
 ('http://r....ortho.tiles.virtualearth.net/tiles/r0230102122203031.png?g=90&shading=hill',)
@@ -18,18 +18,19 @@
 ('http://h....ortho.tiles.virtualearth.net/tiles/h0230102033330212.jpeg?g=90',)
 """
 
+from math import pi
+
 from Core import Coordinate
-from Geo import MercatorProjection, Transformation
+from Geo import MercatorProjection, deriveTransformation
 from Providers import IMapProvider
 
 import random, Tiles
 
 class AbstractProvider(IMapProvider):
     def __init__(self):
-        t = Transformation(1.068070779e7, 0, 3.355443185e7,
-		                   0, -1.068070890e7, 3.355443057e7)
-
-        self.projection = MercatorProjection(26, t)
+        # the spherical mercator world tile covers (-π, -π) to (π, π)
+        t = deriveTransformation(-pi, pi, 0, 0, pi, pi, 1, 0, -pi, -pi, 0, 1)
+        self.projection = MercatorProjection(0, t)
 
     def getZoomString(self, coordinate):
         return Tiles.toMicrosoft(int(coordinate.column), int(coordinate.row), int(coordinate.zoom))

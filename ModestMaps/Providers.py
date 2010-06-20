@@ -1,8 +1,8 @@
-from Core import Coordinate
-from Geo import LinearProjection, MercatorProjection, Transformation
+﻿import re
+from math import pi, pow
 
-import re
-import math
+from Core import Coordinate
+from Geo import LinearProjection, MercatorProjection, deriveTransformation
 
 ids = ('MICROSOFT_ROAD', 'MICROSOFT_AERIAL', 'MICROSOFT_HYBRID',
        'YAHOO_ROAD',     'YAHOO_AERIAL',     'YAHOO_HYBRID',
@@ -35,10 +35,10 @@ class IMapProvider:
         raise NotImplementedError("Abstract method not implemented by subclass.")
 
     def sourceCoordinate(self, coordinate):
-        wrappedColumn = coordinate.column % math.pow(2, coordinate.zoom)
+        wrappedColumn = coordinate.column % pow(2, coordinate.zoom)
         
         while wrappedColumn < 0:
-            wrappedColumn += math.pow(2, coordinate.zoom)
+            wrappedColumn += pow(2, coordinate.zoom)
             
         return Coordinate(coordinate.row, wrappedColumn, coordinate.zoom)
 
@@ -47,10 +47,9 @@ class TemplatedMercatorProvider(IMapProvider):
         http://code.google.com/apis/maps/documentation/overlays.html#Custom_Map_Types
     """
     def __init__(self, template):
-        t = Transformation(1.068070779e7, 0, 3.355443185e7,
-		                   0, -1.068070890e7, 3.355443057e7)
-
-        self.projection = MercatorProjection(26, t)
+        # the spherical mercator world tile covers (-π, -π) to (π, π)
+        t = deriveTransformation(-pi, pi, 0, 0, pi, pi, 1, 0, -pi, -pi, 0, 1)
+        self.projection = MercatorProjection(0, t)
         
         self.templates = []
         

@@ -1,4 +1,4 @@
-"""
+﻿"""
 >>> p = Provider()
 >>> p.getTileUrls(Coordinate(10, 13, 7))
 ('http://tile.openstreetmap.org/7/13/10.png',)
@@ -6,18 +6,19 @@
 ('http://tile.openstreetmap.org/7/10/13.png',)
 """
 
+from math import pi
+
 from Core import Coordinate
-from Geo import MercatorProjection, Transformation
+from Geo import MercatorProjection, deriveTransformation
 from Providers import IMapProvider
 
 import Tiles
 
 class Provider(IMapProvider):
     def __init__(self):
-        t = Transformation(1.068070779e7, 0, 3.355443185e7,
-		                   0, -1.068070890e7, 3.355443057e7)
-
-        self.projection = MercatorProjection(26, t)
+        # the spherical mercator world tile covers (-π, -π) to (π, π)
+        t = deriveTransformation(-pi, pi, 0, 0, pi, pi, 1, 0, -pi, -pi, 0, 1)
+        self.projection = MercatorProjection(0, t)
 
     def tileWidth(self):
         return 256

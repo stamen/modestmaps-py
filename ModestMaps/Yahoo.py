@@ -1,4 +1,4 @@
-"""
+﻿"""
 >>> p = RoadProvider()
 >>> p.getTileUrls(Coordinate(25322, 10507, 16)) #doctest: +ELLIPSIS
 ('http://us.maps2.yimg.com/us.png.maps.yimg.com/png?v=...&t=m&x=10507&y=7445&z=2',)
@@ -18,8 +18,10 @@
 ('http://us.maps3.yimg.com/aerial.maps.yimg.com/tile?v=...&t=a&x=10482&y=7434&z=2', 'http://us.maps3.yimg.com/aerial.maps.yimg.com/png?v=...&t=h&x=10482&y=7434&z=2')
 """
 
+from math import pi
+
 from Core import Coordinate
-from Geo import MercatorProjection, Transformation
+from Geo import MercatorProjection, deriveTransformation
 from Providers import IMapProvider
 
 import Tiles
@@ -30,10 +32,9 @@ HYBRID_VERSION = '2.2'
 
 class AbstractProvider(IMapProvider):
     def __init__(self):
-        t = Transformation(1.068070779e7, 0, 3.355443185e7,
-		                   0, -1.068070890e7, 3.355443057e7)
-
-        self.projection = MercatorProjection(26, t)
+        # the spherical mercator world tile covers (-π, -π) to (π, π)
+        t = deriveTransformation(-pi, pi, 0, 0, pi, pi, 1, 0, -pi, -pi, 0, 1)
+        self.projection = MercatorProjection(0, t)
 
     def getZoomString(self, coordinate):
         return 'x=%d&y=%d&z=%d' % Tiles.toYahoo(int(coordinate.column), int(coordinate.row), int(coordinate.zoom))
