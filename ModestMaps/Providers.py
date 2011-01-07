@@ -12,7 +12,7 @@ ids = ('MICROSOFT_ROAD', 'MICROSOFT_AERIAL', 'MICROSOFT_HYBRID',
 class IMapProvider:
     def __init__(self):
         raise NotImplementedError("Abstract method not implemented by subclass.")
-        
+
     def getTileUrls(self, coordinate):
         raise NotImplementedError("Abstract method not implemented by subclass.")
 
@@ -39,24 +39,25 @@ class IMapProvider:
         
         while wrappedColumn < 0:
             wrappedColumn += pow(2, coordinate.zoom)
-            
+
         return Coordinate(coordinate.row, wrappedColumn, coordinate.zoom)
 
 class TemplatedMercatorProvider(IMapProvider):
     """ Convert URI templates into tile URLs, using a tileUrlTemplate identical to:
         http://code.google.com/apis/maps/documentation/overlays.html#Custom_Map_Types
     """
-    def __init__(self, template):
+    def __init__(self, template, tilestache_cached=False):
         # the spherical mercator world tile covers (-π, -π) to (π, π)
         t = deriveTransformation(-pi, pi, 0, 0, pi, pi, 1, 0, -pi, -pi, 0, 1)
         self.projection = MercatorProjection(0, t)
-        
+
         self.templates = []
-        
+        self.tilestache_cached = tilestache_cached
+
         while template:
-            match = re.match(r'^(http://\S+?)(,http://\S+)?$', template)
+            match = re.match(r'^(https?://\S+?)(,http://\S+)?$', template)
             first = match.group(1)
-            
+
             if match:
                 self.templates.append(first)
                 template = template[len(first):].lstrip(',')
@@ -70,5 +71,14 @@ class TemplatedMercatorProvider(IMapProvider):
         return 256
 
     def getTileUrls(self, coordinate):
+
         x, y, z = str(int(coordinate.column)), str(int(coordinate.row)), str(int(coordinate.zoom))
+
+        if self.tilestache_cached:
+            x = "%0d6" % int(x)
+            y = "%0d6" % int(y)
+
+            x = "%s/%s" % (x[:3], x[3:])
+            y = "%s/%s" % (y[:3], y[3:])
+
         return [t.replace('{X}', x).replace('{Y}', y).replace('{Z}', z) for t in self.templates]
