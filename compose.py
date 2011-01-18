@@ -45,8 +45,7 @@ parser.add_option('-d', '--dimensions', dest='dimensions', nargs=2,
                   action='store')
 
 parser.add_option('-p', '--provider', dest='provider',
-                  type='choice', help='Map Provider, one of: ' + ', '.join(ModestMaps.builtinProviders.keys()),
-                  choices=ModestMaps.builtinProviders.keys(),
+                  help='Map Provider, one of ' + ', '.join(ModestMaps.builtinProviders.keys()) + ' or URL template like "http://example.com/{Z}/{X}/{Y}.png".',
                   action='store')
 
 parser.add_option('-k', '--apikey', dest='apikey',
@@ -69,6 +68,8 @@ if __name__ == '__main__':
                     raise BadComposure("Error: Cloudmade provider requires an API key. Register at http://developers.cloudmade.com/")
 
                 provider = ModestMaps.builtinProviders[options.provider](options.apikey)
+            elif options.provider.startswith('http://'):
+                provider = ModestMaps.Providers.TemplatedMercatorProvider(options.provider)
             else:
                 provider = ModestMaps.builtinProviders[options.provider]()
         except KeyError:
