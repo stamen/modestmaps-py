@@ -1,0 +1,3 @@
+2011-02-02: 1.1.0
+- Added FatBits options to compose.py and Map.draw(), so request lower-zoom
+  tiles in the event of an HTTP 404 on the requested zoom level.

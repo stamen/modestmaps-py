@@ -1,4 +1,4 @@
-VERSION=1.0.1
+VERSION=1.1.0
 PACKAGE=ModestMaps-$(VERSION)
 TARBALL=ModestMaps-Py-$(VERSION).tar.gz
 DOCROOT=modestmaps.com:public_html/modestmaps

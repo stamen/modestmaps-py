@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name='ModestMaps',
-      version='1.0.1',
+      version='1.1.0',
       description='Modest Maps python port',
       author='Michal Migurski',
       url='http://modestmaps.com',
