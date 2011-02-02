@@ -229,7 +229,7 @@ class TileRequest:
     def images(self):
         return self.imgs
     
-    def load(self, lock, verbose, cache, attempt=1, scale=1):
+    def load(self, lock, verbose, cache, fatbits_ok, attempt=1, scale=1):
         if self.done:
             # don't bother?
             return
@@ -256,8 +256,9 @@ class TileRequest:
                     conn = httplib.HTTPConnection(netloc)
                     conn.request('GET', path + ('?' + query).rstrip('?'), headers={'User-Agent': 'Modest Maps python branch (http://modestmaps.com)'})
                     response = conn.getresponse()
+                    status = str(response.status)
                     
-                    if str(response.status).startswith('2'):
+                    if status.startswith('2'):
                         img = PIL.Image.open(StringIO.StringIO(response.read())).convert('RGBA')
                         imgs.append(img)
     
@@ -265,7 +266,7 @@ class TileRequest:
                             cache[(netloc, path, query)] = img
                             lock.release()
                     
-                    elif str(response.status) == '404':
+                    elif status == '404' and fatbits_ok:
                         #
                         # We're probably never going to see this tile.
                         # Try the next lower zoom level for a pixellated output?
@@ -286,7 +287,7 @@ class TileRequest:
                         self.offset.y -= int(y_shift)
                         self.coord = parent
     
-                        return self.load(lock, verbose, cache, attempt+1, scale*2)
+                        return self.load(lock, verbose, cache, fatbits_ok, attempt+1, scale*2)
 
             if scale > 1:
                 imgs = [img.resize((img.size[0] * scale, img.size[1] * scale)) for img in imgs]
@@ -297,7 +298,7 @@ class TileRequest:
 
             if attempt < TileRequest.MAX_ATTEMPTS:
                 time.sleep(1 * attempt)
-                return self.load(lock, verbose, cache, attempt+1, scale)
+                return self.load(lock, verbose, cache, fatbits_ok, attempt+1, scale)
             else:
                 imgs = [None for url in urls]
 
@@ -473,7 +474,7 @@ class Map:
     
     #
     
-    def draw(self, verbose=False):
+    def draw(self, verbose=False, fatbits_ok=False):
         """ Draw map out to a PIL.Image and return it.
         """
         coord = self.coordinate.copy()
@@ -497,11 +498,11 @@ class Map:
                 tileCoord = tileCoord.right()
             rowCoord = rowCoord.down()
 
-        return self.render_tiles(tiles, self.dimensions.x, self.dimensions.y, verbose)
+        return self.render_tiles(tiles, self.dimensions.x, self.dimensions.y, verbose, fatbits_ok)
 
     #
     
-    def render_tiles(self, tiles, img_width, img_height, verbose=False):
+    def render_tiles(self, tiles, img_width, img_height, verbose=False, fatbits_ok=False):
         
         lock = thread.allocate_lock()
         threads = 32
@@ -512,7 +513,7 @@ class Map:
             
             for tile in pool:
                 # request all needed images
-                thread.start_new_thread(tile.load, (lock, verbose, cache))
+                thread.start_new_thread(tile.load, (lock, verbose, cache, fatbits_ok))
                 
             # if it takes any longer than 20 sec overhead + 10 sec per tile, give up
             due = time.time() + 20 + len(pool) * 10

@@ -52,6 +52,10 @@ parser.add_option('-k', '--apikey', dest='apikey',
                   help='API key for map providers that need one, e.g. CloudMade', type='str',
                   action='store')
 
+parser.add_option('-f', '--fat-bits', dest='fatbits',
+                  help='Optionally look to lower zoom levels if tiles at the requested level are unavailable',
+                  action='store_true')
+
 if __name__ == '__main__':
 
     (options, args) = parser.parse_args()
@@ -126,4 +130,4 @@ if __name__ == '__main__':
     if options.verbose:
         print map.coordinate, map.offset, '->', outfile, (map.dimensions.x, map.dimensions.y)
 
-    map.draw(options.verbose).save(outfile)
+    map.draw(options.verbose, options.fatbits).save(outfile)
