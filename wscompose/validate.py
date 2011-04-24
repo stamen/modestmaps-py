@@ -7,209 +7,173 @@ __date__       = "$Date: 2008/01/04 06:23:46 $"
 __copyright__  = "Copyright (c) 2007-2008 Aaron Straup Cope. BSD license : http://www.modestmaps.com/license."
 
 import re
-import string
 import urlparse
 
-class validate :
+_re = {
+    'coord' : re.compile(r"^-?\d+(?:\.\d+)?$"),
+    'adjust' : re.compile(r"^(\d+(?:\.\d*)?|\d*?\.\d+)$"),
+    'num' : re.compile(r"^\d+$"),
+    'provider' : re.compile(r"^(\w+)$"),
+    'label' : re.compile(r"^(?:[a-z0-9-_\.]+)$"),
+    'hull' : re.compile(r"^(marker|dot|plot)$")
+    }
 
-    def __init__ (self) :
+# ##########################################################
 
-        self.re = {
-            'coord' : re.compile(r"^-?\d+(?:\.\d+)?$"),
-            'adjust' : re.compile(r"^(\d+(?:\.\d*)?|\d*?\.\d+)$"),
-            'num' : re.compile(r"^\d+$"),
-            'provider' : re.compile(r"^(\w+)$"),
-            'label' : re.compile(r"^(?:[a-z0-9-_\.]+)$"),
-            'hull' : re.compile(r"^(marker|dot|plot)$")   
-            }
+def validate_regexp (label, string) :
 
-    # ##########################################################
-    
-    def regexp (self, label, string) :
+    if not _re.has_key(label) :
+        return False
 
-        if not self.re.has_key(label) :
-            return False
+    return _re[label].match(string)
 
-        return self.re[label].match(string)
+# ##########################################################
 
-    # ##########################################################
+def validate_ensure_args (args, required) :
 
-    def ensure_args (self, args, required) :
+    for i in required :
 
-        for i in required :
+        if not args.has_key(i) :
+            raise Exception, "Required argument %s missing" % i
 
-            if not args.has_key(i) :
-                raise Exception, "Required argument %s missing" % i
-            
-        return True
+    return True
 
-    # ##########################################################
-    
-    def bbox (self, input) :
+# ##########################################################
+
+    def validate_bbox (input) :
 
         bbox = input.split(",")
-        
+
         if len(bbox) != 4 :
             raise Exception, "Missing or incomplete %s parameter" % 'bbox'
-        
+
         bbox = map(string.strip, bbox)
-        
+
         for pt in bbox :
-            if not self.regexp('coord', pt) :
+            if not validate_regexp('coord', pt) :
                 raise Exception, "Not a valid lat/long : %s" % pt
-            
+
         return map(float, bbox)
 
     # ##########################################################
 
-    def bbox_adjustment (self, input) :
+    def validate_bbox_adjustment (input) :
 
-        if not self.regexp('adjust', str(input)) :
+        if not validate_regexp('adjust', str(input)) :
             raise Exception, "Not a valid adjustment %s " % input
 
         return float(input)
-    
+
     # ##########################################################
 
-    def latlon (self, input) :
+    def validate_latlon (input) :
 
-        if not self.regexp('coord', input) :
+        if not validate_regexp('coord', input) :
             raise Exception, "Not a valid lat/long : %s" % input
 
         return float(input)
 
     # ##########################################################
 
-    def zoom (self, input) :
-        return self.__num(input)
+    def validate_zoom (input) :
+        return validate_number(input)
 
     # ##########################################################
 
-    def dimension (self, input) :
-        return self.__num(input)
+    def validate_dimension (input) :
+        return validate_number(input)
 
     # ##########################################################
 
-    def radius (self, input) :
-        return self.__num(input)
+    def validate_radius (input) :
+        return validate_number(input)
 
     # ##########################################################
 
-    def provider (self, input) :
+    def validate_provider (input) :
 
         if input.startswith('http://'):
             # probably a URI template thing, let it slide
             return input
-        
+
         input = input.upper()
 
-        if not self.regexp('provider', input) :
+        if not validate_regexp('provider', input) :
             raise Exception, "Not a valid provider : %s" % input
 
         return input
 
     # ###########################################################
-    
-    def marker_label (self, input) :
 
-        if not self.regexp('label', input) :
+    def validate_marker_label (input) :
+
+        if not validate_regexp('label', input) :
             raise Exception, "Not a valid marker label"
 
         return unicode(input)
-    
+
     # ##########################################################
 
-    def markers (self, markers) :
+    def validate_markers (markers) :
 
         valid = []
 
         for pos in markers :
 
             marker_data = {'width':75, 'height':75, 'adjust_cone_height' : 0}
-            
+
             details = pos.split(",")
             details = map(string.strip, details)
-            
+
             if len(details) < 3 :
                 raise Exception, "Missing or incomplete %s parameter : %s" % ('marker', pos)
 
             #
             # Magic center/zoom markers
             #
-            
+
             if details[0] == 'center' :
 
                 marker_data['fill'] = 'center'
                 marker_data['label'] = 'center'
-                
-                try : 
-                    marker_data['provider'] = self.provider(details[1])
-                except Exception, e :
-                    raise Exception, e 
 
-                try : 
-                    marker_data['zoom'] = self.zoom(details[2])
-                except Exception, e :
-                    raise Exception, e 
+                marker_data['provider'] = validate_provider(details[1])
+                marker_data['zoom'] = self.zoom(details[2])
 
             #
             # Pinwin name/label
             #
-            
+
             else :
-            
-                try :
-                    marker_data['label'] = self.marker_label(details[0])
-                except Exception, e :
-                    raise Exception, e
+
+                marker_data['label'] = validate_marker_label(details[0])
 
                 # Pinwin location
-            
-                try :
-                    marker_data['latitude'] = self.latlon(details[1])
-                except Exception, e :
-                    raise Exception, e
 
-                try :
-                    marker_data['longitude'] = self.latlon(details[2])
-                except Exception, e :
-                    raise Exception, e
+                marker_data['latitude'] = validate_latlon(details[1])
+                marker_data['longitude'] = validate_latlon(details[2])
 
-            #
-            # Shared
-            #
-            
             #
             # Pinwin size
             #
-            
+
             if len(details) > 3 :
 
                 if len(details) < 4 :
                     raise Exception, "Missing height parameter"
-                
-                try :
-                    marker_data['width'] = self.dimension(details[3])
-                except Exception, e :
-                    raise Exception, e
-                
-                try : 
-                    marker_data['height'] = self.dimension(details[4])
-                except Exception, e :
-                    raise Exception, e
-            
+
+                marker_data['width'] = validate_dimension(details[3])
+                marker_data['height'] = validate_dimension(details[4])
+
             # URI for content to fill the pinwin with
-            
+
             if len(details) > 5 :
 
-                try :
-                    parts = urlparse.urlparse(details[5])
-                except Exception, e :
-                    raise Exception, e
+                parts = urlparse.urlparse(details[5])
 
                 if parts[1] == '' and parts[0] != 'file' :
                     raise Exception, "Unknown URL"
-                
+
                 marker_data['fill'] = details[5]
 
             # Done
@@ -220,7 +184,7 @@ class validate :
 
     # ##########################################################
 
-    def plots (self, plots) :
+    def validate_plots (plots) :
 
         valid = []
 
@@ -228,36 +192,26 @@ class validate :
 
             details = pos.split(",")
             details = map(string.strip, details)
-            
+
             if len(details) < 3 :
                 raise Exception, "Missing or incomplete %s parameter : %s" % ('plot', pos)
 
             data = {}
-            
-            try :
-                data['label'] = self.marker_label(details[0])
-            except Exception, e :
-                raise Exception, e
+
+            data['label'] = validate_marker_label(details[0])
 
             # Pinwin location
-            
-            try :
-                data['latitude'] = self.latlon(details[1])
-            except Exception, e :
-                raise Exception, e
 
-            try :
-                data['longitude'] = self.latlon(details[2])
-            except Exception, e :
-                raise Exception, e
+            data['latitude'] = validate_latlon(details[1])
+            data['longitude'] = validate_latlon(details[2])
 
             valid.append(data)
 
         return valid
-            
+
     # ##########################################################
 
-    def dots (self, dots) :
+    def validate_dots (self, dots) :
 
         valid = []
 
@@ -266,91 +220,67 @@ class validate :
             details = pos.split(",")
             details = map(string.strip, details)
             cnt = len(details)
-            
+
             if cnt < 3 :
                 raise Exception, "Missing or incomplete %s parameter : %s" % ('dot', pos)
 
             data = {}
-            
-            try :
-                data['label'] = self.marker_label(details[0])
-            except Exception, e :
-                raise Exception, e
 
-            # Pinwin location
-            
-            try :
-                data['latitude'] = self.latlon(details[1])
-            except Exception, e :
-                raise Exception, e
+            data['label'] = validate_marker_label(details[0])
+            data['latitude'] = validate_latlon(details[1])
+            data['longitude'] = validate_latlon(details[2])
 
-            try :
-                data['longitude'] = self.latlon(details[2])
-            except Exception, e :
-                raise Exception, e
-
-            #
-            
             if cnt > 3 :
-                try :
-                    data['radius'] = self.radius(details[3])
-                except Exception, e :
-                    raise Exception, e
-
+                data['radius'] = validate_radius(details[3])
             else :
                 data['radius'] = 18
 
-            #
-            
             if cnt > 4 :
-                #  fix me
                 pass
             else :
                 data['colour'] = 'red'
 
-            #
-
             valid.append(data)
 
         return valid
-            
+
     # ##########################################################
 
-    def polylines (self, lines) :
+    def validate_polylines (lines) :
 
         valid = []
-        
+
         for poly in lines :
 
             points = []
-            
+
             for pt in poly.split(" ") :
-            
+
                 coord = pt.split(",")
 
                 if len(coord) != 2 :
                     raise Exception, "Polyline coordinate missing data"
-                
-                (lat, lon) = map(string.strip, coord) 
-                
-                lat = self.latlon(lat)
-                lon = self.latlon(lon)
+
+                (lat, lon) = map(string.strip, coord)
+
+                lat = validate_latlon(lat)
+                lon = validate_latlon(lon)
 
                 points.append({'latitude':lat, 'longitude':lon})
 
             valid.append(points)
-            
-        return valid
-    
-    # ##########################################################    
 
-    def convex (self, hulls) :
-        
+        return valid
+
+    # ##########################################################
+
+    def validate_convex (hulls) :
+
         valid = []
 
         for label in hulls :
-            
-            if not self.regexp('hull', label)  :
+
+            if not validate_regexp('hull', label)  :
                 raise Exception, "Unknown marker type for convex hulls"
 
             valid.append(label)
@@ -359,18 +289,18 @@ class validate :
 
     # ##########################################################
 
-    def json_callback(self, func) :
+    def validate_json_callback(func) :
 
         if not self.re['label'].match(func) :
             raise Exception, "Invalid JSON callback name"
-        
-        return func
-    
-    # ##########################################################
-    
-    def __num (self, input) :
 
-        if not self.regexp('num', input) :
+        return func
+
+    # ##########################################################
+
+    def validate_number(input) :
+
+        if not validate_regexp('num', input) :
             raise Exception, "Not a valid number : %s" % p
 
         return int(input)

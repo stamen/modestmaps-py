@@ -9,7 +9,7 @@ __copyright__  = "Copyright (c) 2007-2008 Aaron Straup Cope. BSD license : http:
 
 """convexhull.py
 
-Calculate the convex hull of a set of n 2D-points in O(n log n) time.  
+Calculate the convex hull of a set of n 2D-points in O(n log n) time.
 Taken from Berg et al., Computational Geometry, Springer-Verlag, 1997.
 Prints output as EPS file.
 

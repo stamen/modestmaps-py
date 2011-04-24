@@ -2,17 +2,22 @@
 
 import ModestMaps
 
-from urlparse import urlparse
-from cgi import parse_qs, escape
 from math import sin, cos, acos, radians, degrees
-import tempfile
-import string
+
 import StringIO
 import types
 
-import validate
-
 from wscompose.help import *
+from wscompose.validate import *
+
+class wserror(Exception):
+
+    def __init__ (self, code=999, msg='OH NOES'):
+        self.code = 999
+        self.msg = msg
+
+    def __str__ (self):
+        return repr(self.msg)
 
 class wscompose:
 
@@ -20,50 +25,10 @@ class wscompose:
         self.ctx = {}
         self.points = {}
 
-    def do_GET(self, params):
-
-        if not self.load_ctx(params) :
-            return
-
-        img = self.draw_map()
-        return img
-
-    # ##########################################################
-
-    def do_POST (self) :
-
-        clen = self.headers.getheader('content-length')
-
-        if clen:
-            clen = int(clen)
-        else:
-            self.send_error(400, "Missing Content-Length parameter");
-            return
-
-        query = self.rfile.read(clen)
-        params = parse_qs(query)
-
-        if not self.load_ctx(params) :
-            return
-
-        img = self.draw_map()
-
-        self.send_map(img)
-        return
-
-    # ##########################################################
-
     def load_ctx (self, params) :
 
-        args = self.validate_params(params)
-
-        if not args :
-            return False
-
-        self.ctx = args
-        return True
-
-    # ##########################################################
+        self.ctx = self.validate_params(params)
+        return ctx
 
     def draw_map (self) :
 
@@ -77,8 +42,7 @@ class wscompose:
                 return self.draw_map_centered()
 
         except Exception, e :
-            self.error(200, "composer error : %s" % e)
-            return False
+            raise wserror(200, "composer error : %s" % e)
 
     # ##########################################################
 
@@ -178,46 +142,6 @@ class wscompose:
 
     # ##########################################################
 
-    def send_map (self, img) :
-
-        if self.ctx['output'] == 'json' :
-            return self.send_map_as_json(img)
-
-        #
-
-        format = self.ctx.get('output', 'png')
-
-        fh = StringIO.StringIO()
-        img.save(fh, format.upper())
-
-        self.send_response(200, "OK")
-        self.send_header("Content-Type", "image/%(format)s" % locals())
-        self.send_header("Content-Length", fh.len)
-
-        self.send_x_headers(img)
-        self.end_headers()
-
-        self.wfile.write(fh.getvalue())
-        return
-
-    # ##########################################################
-
-    def send_map_as_json (self, img) :
-
-        js = self.generate_javascript_output(img)
-
-        self.send_response(200, "OK")
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Content-Length", len(js))
-
-        self.send_x_headers(img)
-        self.end_headers()
-
-        self.wfile.write(js)
-        return
-
-    # ##########################################################
-
     def generate_javascript_output(self, img) :
 
         import base64
@@ -225,8 +149,8 @@ class wscompose:
         fh = StringIO.StringIO()
         img.save(fh, "PNG")
 
-        # this probably means it's time to
-        # invest in a templating system...
+        # please for to be using json.py ...
+        # (20110423/straup)
 
         js = "{"
 
@@ -297,16 +221,6 @@ class wscompose:
 
     def validate_params (self, params) :
 
-        validator = validate.validate()
-
-        if len(params.keys()) == 0 :
-            self.help()
-            return False
-
-        #
-        # I am a blank canvas
-        #
-
         valid = {'output' : 'png'}
 
         #
@@ -321,16 +235,14 @@ class wscompose:
         #
 
         try :
-            validator.ensure_args(params, ('provider',))
+            validate_ensure_args(params, ('provider',))
         except Exception, e :
-            self.error(101, e)
-            return False
+            raise wserror(101, e)
 
         try :
-            valid['provider'] = validator.provider(params['provider'][0])
+            valid['provider'] = validate_provider(params['provider'][0])
         except Exception, e :
-            self.error(101, e)
-            return False
+            raise wserror(101, e)
 
         if params.has_key('tilestache_cached'):
             valid['tilestache_cached'] = True
@@ -344,105 +256,91 @@ class wscompose:
         if params['method'][0] == 'extent' :
 
             try :
-                validator.ensure_args(params, ('bbox', 'height', 'width'))
+                validate_ensure_args(params, ('bbox', 'height', 'width'))
             except Exception, e :
-                self.error(111, e)
-                return False
+                raise wserror(111, e)
 
             try :
-                valid['bbox'] = validator.bbox(params['bbox'][0])
+                valid['bbox'] = validate_bbox(params['bbox'][0])
             except Exception, e :
-                self.error(112, e)
-                return False
+                raise wserror(112, e)
 
             for p in ('height', 'width') :
 
                 try :
-                    valid[p] = validator.dimension(params[p][0])
+                    valid[p] = validate_dimension(params[p][0])
                 except Exception, e :
-                    self.error(113, e)
-                    return False
+                    raise wserror(113, e)
 
             if params.has_key('adjust') :
 
                 try :
-                    valid['adjust'] = validator.bbox_adjustment(params['adjust'][0])
+                    valid['adjust'] = validate_bbox_adjustment(params['adjust'][0])
                 except Exception, e :
-                    self.error(124, e)
-                    return False
+                    raise wserror(124, e)
 
             # you can blame migurski for this
 
             if params.has_key('zoom') :
-                self.error(125, "'zoom' is not a valid argument when method is 'extent'")
-                return False
+                raise wserror(125, "'zoom' is not a valid argument when method is 'extent'")
 
         elif params['method'][0] == 'bbox' :
 
             try :
-                validator.ensure_args(params, ('bbox', 'zoom'))
+                validate_ensure_args(params, ('bbox', 'zoom'))
             except Exception, e :
-                self.error(121, e)
-                return False
+                raise wserror(121, e)
 
             try :
-                valid['bbox'] = validator.bbox(params['bbox'][0])
+                valid['bbox'] = validate_bbox(params['bbox'][0])
             except Exception, e :
-                self.error(122, e)
-                return False
+                raise wserror(122, e)
 
             try :
-                valid['zoom'] = validator.zoom(params['zoom'][0])
+                valid['zoom'] = validate_zoom(params['zoom'][0])
             except Exception, e :
-                self.error(123, e)
-                return False
+                raise wserror(123, e)
 
             if params.has_key('adjust') :
 
                 try :
-                    valid['adjust'] = validator.bbox_adjustment(params['adjust'][0])
+                    valid['adjust'] = validate_bbox_adjustment(params['adjust'][0])
                 except Exception, e :
-                    self.error(124, e)
-                    return False
+                    raise wserror(124, e)
 
             # you can blame migurski for this
 
             for p in ('height', 'width') :
                 if params.has_key(p) :
-                    self.error(125, "'%s' is not a valid argument when method is 'bbox'" % p)
-                    return False
+                    raise wserror(125, "'%s' is not a valid argument when method is 'bbox'" % p)
 
         # center
 
         else :
 
             try :
-                validator.ensure_args(params, ('latitude', 'longitude', 'zoom', 'height', 'width'))
+                validate_ensure_args(params, ('latitude', 'longitude', 'zoom', 'height', 'width'))
             except Exception, e :
-                self.error(131, e)
-                return False
+                raise wserror(131, e)
 
             for p in ('latitude', 'longitude') :
 
                 try :
-                    valid[p] = validator.latlon(params[p][0])
+                    valid[p] = validate_latlon(params[p][0])
                 except Exception, e :
-                    self.error(132, e)
-                    return False
+                    raise wserror(132, e)
 
             try :
-                valid['zoom'] = validator.zoom(params['zoom'][0])
+                valid['zoom'] = validate_zoom(params['zoom'][0])
             except Exception, e :
-                self.error(133, e)
-                return False
+                raise wserror(133, e)
 
             for p in ('height', 'width') :
 
                 try :
-                    valid[p] = validator.dimension(params[p][0])
+                    valid[p] = validate_dimension(params[p][0])
                 except Exception, e :
-                    self.error(134, e)
-                    return False
+                    raise wserror(134, e)
 
         #
         # plotting or "headless" markers
@@ -451,10 +349,9 @@ class wscompose:
         if params.has_key('plot') :
 
             try :
-                valid['plots'] = validator.plots(params['plot'])
+                valid['plots'] = validate_plots(params['plot'])
             except Exception, e :
-                self.error(141, e)
-                return False
+                raise wserror(141, e)
 
         #
         # json ?
@@ -469,14 +366,12 @@ class wscompose:
 
             elif out == 'javascript' :
                 if not params.has_key('callback') :
-                    self.error(142, 'Missing JSON callback')
-                    return False
+                    raise wserror(142, 'Missing JSON callback')
 
                 try :
-                    valid['json_callback'] = validator.json_callback(params['callback'][0])
+                    valid['json_callback'] = validate_json_callback(params['callback'][0])
                 except Exception, e:
-                    self.error(143, e)
-                    return False
+                    raise wserror(143, e)
 
                 valid['output'] = 'json'
 
@@ -484,8 +379,7 @@ class wscompose:
                 valid['output'] = out
 
             else :
-                self.error(144, 'Not a valid output format')
-                return False
+                raise wserror(144, 'Not a valid output format')
 
         #
         # whoooosh
@@ -494,11 +388,6 @@ class wscompose:
         valid['method'] = params['method'][0]
 
         return valid
-
-    # ##########################################################
-
-    # learn about python 'mixins' - it would nice to move this
-    # into a separate package...
 
     # ##########################################################
 
@@ -642,13 +531,3 @@ class wscompose:
                 help_header("License"),
                 help_para("Copyright (c) 2007-2008 Aaron Straup Cope. All Rights Reserved. This is free software. You may redistribute it and/or modify it under the same terms the BSD license : http://www.modestmaps.com/license.txt")
                 ])
-
-    # ##########################################################
-
-    def error (self, err_code=999, err_msg="OH NOES!!! INVISIBLE ERRORZ!!!") :
-	raise Exception, "%s %s" % (err_code, err_msg)
-
-    # ##########################################################
-
-    def sanitize (self, str) :
-        return escape(unicode(str))
