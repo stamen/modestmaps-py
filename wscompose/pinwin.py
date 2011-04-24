@@ -32,77 +32,10 @@ class handler (wscompose.plotting.handler, wscompose.dithering.handler) :
 
         img = wscompose.handler.draw_map(self)
 
-        if self.ctx.has_key('filter') and self.ctx['filter'] == 'atkinson' :
-            img = self.atkinson_dithering(img)
-
         #
 
-        if self.ctx.has_key('polylines') :
-            img = self.draw_polylines(img)
-
-        #
-
-        if self.ctx.has_key('hulls') :
-            img = self.draw_convex_hulls(img)
-            
-        #
-        
-        if self.ctx.has_key('dots') :
-            img = self.draw_dots(img)
-
-        #
-        
-        if self.ctx.has_key('markers') :
-
-            self.reposition_markers()
-            
-            if self.ctx.has_key('bleed') :
-                img = self.draw_markers_with_bleed(img)                
-            else :
-                img = self.draw_markers(img)            
-
-        #
-        
         return img
 
-    # ##########################################################
-
-    def send_x_headers (self, img) :
-
-        wscompose.handler.send_x_headers(self, img)
-        
-        if self.ctx.has_key('markers') :
-            
-            for mrk_data in self.ctx['markers'] :
-            
-                # The first two numbers are the x/y coordinates for the lat/lon.
-                # The second two are the x/y coordinates of the top left corner
-                # where the actual pinwin content should be pasted. The last pair
-                # are the dimensions of the pinwin content which is sort of redundant
-                # unless you are opting for defaults and don't know what to expect.
-
-                details = (mrk_data['x'], mrk_data['y'],
-                           mrk_data['x_fill'], mrk_data['y_fill'],
-                           mrk_data['width'], mrk_data['height'])
-                
-                details = map(str, details)
-                header = "X-wscompose-Marker-%s" % mrk_data['label']
-                sep = ","
-                
-                self.send_header(header, sep.join(details))
-
-        #
-
-        if self.ctx.has_key('dots') :
-            for data in self.ctx['dots'] :
-
-                pt = self.latlon_to_point(data['latitude'], data['longitude'])
-
-                header = "X-wscompose-Dot-%s" % data['label']
-                coords = "%s,%s,%s" % (int(pt.x), int(pt.y), int(data['radius']))
-                
-                self.send_header(header, coords)
-        
     # ##########################################################
 
     def draw_polylines (self, img) :
@@ -113,15 +46,15 @@ class handler (wscompose.plotting.handler, wscompose.dithering.handler) :
         return img
 
     # ##########################################################
-    
+
     def draw_polyline (self, img, poly) :
-        
+
         dr = ImageDraw.Draw(img)
         cnt = len(poly)
         i = 0
 
         grey = (42, 42, 42)
-        
+
         while i < cnt : 
 
             j = i + 1
@@ -136,9 +69,9 @@ class handler (wscompose.plotting.handler, wscompose.dithering.handler) :
             i += 1
 
         #
-                
+
         return img
-            
+
     # ##########################################################
 
     def draw_convex_hulls(self, img) :
@@ -151,13 +84,13 @@ class handler (wscompose.plotting.handler, wscompose.dithering.handler) :
 
             # sigh...
             key = "%ss" % type
-            
+
             for coord in self.ctx[key] : 
                 pt = self.latlon_to_point(coord['latitude'], coord['longitude'])    
                 points.append((pt.x, pt.y))
 
             hull = convexhull.convexHull(points)
-            
+
             #
             # no way to assign width to polygon outlines in PIL...
             #

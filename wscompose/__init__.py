@@ -210,16 +210,10 @@ class wscompose:
 
         valid = {'output' : 'png'}
 
-        #
-        # La la la - I can't hear you
-        #
-
         if not params.has_key('method') :
             params['method'] = ['center']
 
-        #
         # Everyone needs a provider...
-        #
 
         try :
             validate_ensure_args(params, ('provider',))
@@ -236,9 +230,7 @@ class wscompose:
         else:
             valid['tilestache_cached'] = False
 
-        #
         # Method specific requirements
-        #
 
         if params['method'][0] == 'extent' :
 
@@ -329,9 +321,7 @@ class wscompose:
                 except Exception, e :
                     raise wserror(134, e)
 
-        #
         # plotting or "headless" markers
-        #
 
         if params.has_key('plot') :
 
@@ -340,9 +330,7 @@ class wscompose:
             except Exception, e :
                 raise wserror(141, e)
 
-        #
         # json ?
-        #
 
         if params.has_key('output') :
 
@@ -521,3 +509,6 @@ class wscompose:
                 help_header("License"),
                 help_para("Copyright (c) 2007-2011 Aaron Straup Cope. All Rights Reserved. This is free software. You may redistribute it and/or modify it under the same terms the BSD license : http://www.modestmaps.com/license.txt")
                 ])
+
+class wspinwin (wscompose):
+    pass
