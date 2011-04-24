@@ -28,7 +28,9 @@ class wserror(Exception):
 
 class wscompose:
 
-    def __init__ (self) :
+    def __init__ (self, environ={}) :
+
+        self.environ = environ
         self.ctx = {}
         self.points = {}
 
@@ -397,9 +399,11 @@ class wscompose:
 
     def help_example (self) :
 
+        host = self.environ.get('HTTP_HOST', '127.0.0.1:9999')
+
         return "\n\n".join([
                 help_header("Example"),
-                help_para("http://127.0.0.1:9999/?provider=MICROSOFT_ROAD&latitude=41.904688&longitude=12.494308&zoom=17&height=500&width=500"),
+                help_para("http://%s/?provider=MICROSOFT_ROAD&latitude=41.904688&longitude=12.494308&zoom=17&height=500&width=500" % host),
                 help_para("Returns a PNG file of a map centered on the Santa Maria della Vittoria, in Rome.")
                 ])
 
@@ -504,7 +508,7 @@ class wscompose:
                 help_header("Questions"),
                 help_qa("Is it fast?", "Not really. It is designed, primarily, to be run on the same machine that is calling the interface."),
                 help_qa("Will it ever be fast?", "Sure. The ws-compose.py script is just a thin wrapper around a WSGI compliant server which means you can run it with zippy web frameworks like gunicorn(.org). For example:"),
-                help_pre("\t$> /usr/local/bin/gunicorn wscompose.WSGIComposeServer:application"),
+                help_pre("\t$> /usr/local/bin/gunicorn --options wscompose.WSGIComposeServer:application"),
                 help_qa("Can I request map images asynchronously?", "Not yet."),
                 help_qa("Can I get a pony?", "No.")
                 ])

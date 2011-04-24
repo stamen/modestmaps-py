@@ -13,7 +13,7 @@ def application(environ, start_response):
 
     try:
 
-        ws = wscompose()
+        ws = wscompose(environ)
 
         if len(params.keys()) == 0:
 
