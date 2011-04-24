@@ -1,5 +1,4 @@
-import sys
-sys.path.insert(0, '/home/asc/ext/python/modestmaps-py/')
+#!/usr/bin/env python
 
 from urlparse import parse_qs
 from wscompose import wscompose
@@ -7,20 +6,17 @@ import StringIO
 
 def application(environ, start_response):
 
-    # path_info = environ.get('PATH_INFO', None)
-
     query_string = environ.get('QUERY_STRING', None)
     params = parse_qs(query_string)
-
-    ws = wscompose()
 
     x_headers = None
 
     try:
 
+        ws = wscompose()
+
         if len(params.keys()) == 0:
 
-            status = '200 OK'
             content_type = 'text/plain'
             data = ws.help()
 
@@ -30,11 +26,12 @@ def application(environ, start_response):
             format = ctx.get('output', 'png')
 
             img = ws.draw_map()
+            x_headers = ws.generate_x_headers(img)
 
             if format == 'json':
 
                 content_type = 'application/js'
-                data = self.generate_javascript_output(img)
+                data = ws.generate_javascript_output(img)
 
             else:
 
@@ -44,7 +41,7 @@ def application(environ, start_response):
                 content_type = 'image/%s' % format.lower()
                 data = fh.getvalue()
 
-            status = '200 OK'
+        status = '200 OK'
 
     except Exception, e:
 
@@ -59,9 +56,8 @@ def application(environ, start_response):
         ('Content-Length', str(len(data)))
         ]
 
-    if x_headers:
-        for k, v in x_headers.items():
-            response_headers.append(k, str(v))
+    for k, v in x_headers.items():
+            response_headers.append((k, str(v)))
 
     # go!
 
@@ -69,4 +65,7 @@ def application(environ, start_response):
     return iter([data])
 
 if __name__ == '__main__' :
-    pass
+
+    from wsgiref.simple_server import make_server
+    server = make_server('localhost', 9999, application)
+    server.serve_forever()

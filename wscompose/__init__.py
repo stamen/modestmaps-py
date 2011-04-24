@@ -4,8 +4,15 @@ import ModestMaps
 
 from math import sin, cos, acos, radians, degrees
 
+import base64
+
 import StringIO
 import types
+
+try:
+    import json
+except Exception, e:
+    import simplejson as json
 
 from wscompose.help import *
 from wscompose.validate import *
@@ -43,14 +50,10 @@ class wscompose:
         except Exception, e :
             raise wserror(200, "composer error : %s" % e)
 
-    # ##########################################################
-
     def draw_map_extentified (self) :
 
         if self.ctx.has_key('adjust') :
             self.ctx['bbox'] = self.__adjust_bbox(self.ctx['bbox'], self.ctx['adjust'])
-
-        #
 
         provider = self.load_provider(self.ctx['provider'])
 
@@ -143,54 +146,37 @@ class wscompose:
 
     def generate_javascript_output(self, img) :
 
-        import base64
-
         fh = StringIO.StringIO()
         img.save(fh, "PNG")
 
-        # please for to be using json.py ...
-        # (20110423/straup)
+        _json = self.generate_x_headers(img)
+        _json['data'] = base64.b64encode(fh.getvalue())
 
-        js = "{"
+        if self.ctx.get('json_callback', None) :
+            callback = "%s(%s)" % (self.ctx['json_callback'], js)
+            _json['json_callback'] = callback
 
-        js += "\"X-wscompose-Image-Height\":\"%s\"," % img.size[1]
-        js += "\"X-wscompose-Image-Width\":\"%s\"," % img.size[0]
-        js += "\"X-wscompose-Map-Zoom\":\"%s\"," % self.ctx['zoom']
-
-        if self.ctx.has_key('plots') :
-            for data in self.ctx['plots'] :
-
-                pt = self.latlon_to_point(data['latitude'], data['longitude'])
-
-                header = "X-wscompose-Plot-%s" % data['label']
-                coords = "%s,%s" % (int(pt.x), int(pt.y))
-
-                js += "\"%s\":\"%s\"," % (header, coords)
-
-        js += "\"data\":\"%s\"" % base64.b64encode(fh.getvalue())
-        js += "}"
-
-        if self.ctx.has_key('json_callback') :
-            js = "%s(%s)" % (self.ctx['json_callback'], js)
-
-        return js
+        return json.dumps(_json)
 
     # ##########################################################
 
-    def send_x_headers (self, img) :
-        self.send_header("X-wscompose-Image-Height", img.size[1])
-        self.send_header("X-wscompose-Image-Width", img.size[0])
-        self.send_header("X-wscompose-Map-Zoom", self.ctx['zoom'])
+    def generate_x_headers (self, img) :
 
-        if self.ctx.has_key('plots') :
-            for data in self.ctx['plots'] :
+        headers = {
+                "X-wscompose-Image-Height" : img.size[1],
+                "X-wscompose-Image-Width" : img.size[0],
+                "X-wscompose-Map-Zoom" : self.ctx['zoom']
+                }
 
-                pt = self.latlon_to_point(data['latitude'], data['longitude'])
+        for data in self.ctx.get('plots', []) :
 
-                header = "X-wscompose-Plot-%s" % data['label']
-                coords = "%s,%s" % (int(pt.x), int(pt.y))
+            pt = self.latlon_to_point(data['latitude'], data['longitude'])
 
-                self.send_header(header, coords)
+            key = "X-wscompose-Plot-%s" % data['label']
+            coords = "%s,%s" % (int(pt.x), int(pt.y))
+            headers[key] = coords
+
+        return headers
 
     # ##########################################################
 

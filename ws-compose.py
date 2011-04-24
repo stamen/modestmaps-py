@@ -1,12 +1,15 @@
+#!/usr/bin/env python
+
 import optparse
-import wscompose
+from wsgiref.simple_server import make_server
+from wscompose.WSGIComposeServer import application
 
 if __name__ == "__main__" :
 
     parser = optparse.OptionParser()
-    parser.add_option("-p", "--port", dest="port", help="port number that the ws-compose HTTP server will listen on", default=9999)
-    
+    parser.add_option("-p", "--port", dest="port", help="port number that the ws-pinwin HTTP server will listen on", default=9999)
+
     (opts, args) = parser.parse_args()
-    
-    app = wscompose.server(wscompose.handler, int(opts.port))
-    app.loop()
+
+    server = make_server('localhost', int(opts.port), application)
+    server.serve_forever()
