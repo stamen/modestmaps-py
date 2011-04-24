@@ -26,9 +26,8 @@ class wscompose:
         self.points = {}
 
     def load_ctx (self, params) :
-
         self.ctx = self.validate_params(params)
-        return ctx
+        return self.ctx
 
     def draw_map (self) :
 

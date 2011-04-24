@@ -3,6 +3,7 @@ sys.path.insert(0, '/home/asc/ext/python/modestmaps-py/')
 
 from urlparse import parse_qs
 from wscompose import wscompose
+import StringIO
 
 def application(environ, start_response):
 
@@ -26,7 +27,7 @@ def application(environ, start_response):
         else:
 
             ctx = ws.load_ctx(params)
-            format = ws.ctx.get('output', 'png')
+            format = ctx.get('output', 'png')
 
             img = ws.draw_map()
 
@@ -66,3 +67,6 @@ def application(environ, start_response):
 
     start_response(status, response_headers)
     return iter([data])
+
+if __name__ == '__main__' :
+    pass
