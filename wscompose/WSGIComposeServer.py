@@ -56,7 +56,8 @@ def application(environ, start_response):
         ('Content-Length', str(len(data)))
         ]
 
-    for k, v in x_headers.items():
+    if x_headers:
+        for k, v in x_headers.items():
             response_headers.append((k, str(v)))
 
     # go!

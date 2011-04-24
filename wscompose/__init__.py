@@ -503,7 +503,8 @@ class wscompose:
         return "\n\n".join([
                 help_header("Questions"),
                 help_qa("Is it fast?", "Not really. It is designed, primarily, to be run on the same machine that is calling the interface."),
-                help_qa("Will it ever be fast?", "Sure. It is on The List (tm) to create a mod_python and/or wsgi version. Patches are welcome."),
+                help_qa("Will it ever be fast?", "Sure. The ws-compose.py script is just a thin wrapper around a WSGI compliant server which means you can run it with zippy web frameworks like gunicorn(.org). For example:"),
+                help_pre("\t$> /usr/local/bin/gunicorn wscompose.WSGIComposeServer:application"),
                 help_qa("Can I request map images asynchronously?", "Not yet."),
                 help_qa("Can I get a pony?", "No.")
                 ])
@@ -514,5 +515,5 @@ class wscompose:
 
         return "\n\n".join([
                 help_header("License"),
-                help_para("Copyright (c) 2007-2008 Aaron Straup Cope. All Rights Reserved. This is free software. You may redistribute it and/or modify it under the same terms the BSD license : http://www.modestmaps.com/license.txt")
+                help_para("Copyright (c) 2007-2011 Aaron Straup Cope. All Rights Reserved. This is free software. You may redistribute it and/or modify it under the same terms the BSD license : http://www.modestmaps.com/license.txt")
                 ])
