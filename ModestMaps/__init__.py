@@ -72,17 +72,17 @@ import thread
 import time
 
 try:
-    import PIL.Image
+    import Image
 except ImportError:
     # you need PIL to do any actual drawing, but
     # maybe that's not what you're using MMaps for?
-    pass
+    import PIL.Image as Image
 
 import Tiles
 import Providers
 import Core
 import Geo
-import Yahoo, Microsoft, BlueMarble, OpenStreetMap, CloudMade
+import Yahoo, Microsoft, BlueMarble, OpenStreetMap, CloudMade, MapQuest
 import time
 
 # a handy list of possible providers, which isn't
@@ -91,6 +91,8 @@ builtinProviders = {
     'OPENSTREETMAP':    OpenStreetMap.Provider,
     'OPEN_STREET_MAP':  OpenStreetMap.Provider,
     'BLUE_MARBLE':      BlueMarble.Provider,
+    'MAPQUEST_ROAD':   MapQuest.RoadProvider,
+    'MAPQUEST_AERIAL':   MapQuest.AerialProvider,
     'MICROSOFT_ROAD':   Microsoft.RoadProvider,
     'MICROSOFT_AERIAL': Microsoft.AerialProvider,
     'MICROSOFT_HYBRID': Microsoft.HybridProvider,
@@ -259,7 +261,7 @@ class TileRequest:
                     status = str(response.status)
                     
                     if status.startswith('2'):
-                        img = PIL.Image.open(StringIO.StringIO(response.read())).convert('RGBA')
+                        img = Image.open(StringIO.StringIO(response.read())).convert('RGBA')
                         imgs.append(img)
     
                         if lock.acquire():
@@ -522,7 +524,7 @@ class Map:
                 # hang around until they are loaded or we run out of time...
                 time.sleep(1)
 
-        mapImg = PIL.Image.new('RGB', (img_width, img_height))
+        mapImg = Image.new('RGB', (img_width, img_height))
         
         for tile in tiles:
             try:
