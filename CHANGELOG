@@ -1,3 +1,6 @@
+2011-05-24: 1.2.1
+- Fixed bug in MapQuest providers.
+
 2011-05-23: 1.2.0
 - Added MapQuest road (MQ+OSM) and aerial (NAIP) providers.
 
