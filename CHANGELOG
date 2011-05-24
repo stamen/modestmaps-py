@@ -1,3 +1,6 @@
+2011-05-23: 1.2.0
+- Added MapQuest road (MQ+OSM) and aerial (NAIP) providers.
+
 2011-02-02: 1.1.0
 - Added FatBits options to compose.py and Map.draw(), so request lower-zoom
   tiles in the event of an HTTP 404 on the requested zoom level.
