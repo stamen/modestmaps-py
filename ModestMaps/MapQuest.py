@@ -34,11 +34,11 @@ class AbstractProvider(IMapProvider):
 
 class RoadProvider(AbstractProvider):
     def getTileUrls(self, coordinate):
-        return ('http://otile%d.mqcdn.com/tiles/1.0.0/%d/%d/%d.png' % (random.randint(0, 4), coordinate.zoom, coordinate.column, coordinate.row),)
+        return ('http://otile%d.mqcdn.com/tiles/1.0.0/%d/%d/%d.png' % (random.randint(1, 4), coordinate.zoom, coordinate.column, coordinate.row),)
 
 class AerialProvider(AbstractProvider):
     def getTileUrls(self, coordinate):
-        return ('http://oatile%d.mqcdn.com/naip/%d/%d/%d.png' % (random.randint(0, 4), coordinate.zoom, coordinate.column, coordinate.row),)
+        return ('http://oatile%d.mqcdn.com/naip/%d/%d/%d.png' % (random.randint(1, 4), coordinate.zoom, coordinate.column, coordinate.row),)
 
 if __name__ == '__main__':
     import doctest
