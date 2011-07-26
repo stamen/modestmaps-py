@@ -2,7 +2,7 @@
 
 import optparse
 from wsgiref.simple_server import make_server
-from wscompose.WSGIComposeServer import application
+from wscompose import WSGIComposeServer
 
 if __name__ == "__main__" :
 
@@ -11,5 +11,5 @@ if __name__ == "__main__" :
 
     (opts, args) = parser.parse_args()
 
-    server = make_server('localhost', int(opts.port), application)
+    server = make_server('localhost', int(opts.port), WSGIComposeServer())
     server.serve_forever()

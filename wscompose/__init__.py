@@ -9,6 +9,8 @@ import base64
 import StringIO
 import types
 
+from urlparse import parse_qs
+
 try:
     import json
 except Exception, e:
@@ -510,5 +512,61 @@ class wscompose:
                 help_para("Copyright (c) 2007-2011 Aaron Straup Cope. All Rights Reserved. This is free software. You may redistribute it and/or modify it under the same terms the BSD license : http://www.modestmaps.com/license.txt")
                 ])
 
-class wspinwin (wscompose):
-    pass
+class WSGIComposeServer:
+
+    def __call__(self, environ, start_response):
+
+        query_string = environ.get('QUERY_STRING', None)
+        params = parse_qs(query_string)
+
+        x_headers = None
+
+        try:
+
+            ws = wscompose(environ)
+
+            if len(params.keys()) == 0:
+
+                content_type = 'text/plain'
+                data = ws.help()
+
+            else:
+
+                ctx = ws.load_ctx(params)
+                format = ctx.get('output', 'png')
+
+                img = ws.draw_map()
+                x_headers = ws.generate_x_headers(img)
+
+                if format == 'json':
+
+                    content_type = 'application/js'
+                    data = ws.generate_javascript_output(img)
+
+                else:
+
+                    fh = StringIO.StringIO()
+                    img.save(fh, format.upper())
+
+                    content_type = 'image/%s' % format.lower()
+                    data = fh.getvalue()
+
+            status = '200 OK'
+
+        except Exception, e:
+
+            status = '500 SERVER ERROR'
+            content_type = 'text/plain'
+            data = str(e)
+
+        response_headers = [
+            ('Content-type', str(content_type)),
+            ('Content-Length', str(len(data)))
+            ]
+
+        if x_headers:
+            for k, v in x_headers.items():
+                response_headers.append((k, str(v)))
+
+        start_response(status, response_headers)
+        return iter([data])
