@@ -200,7 +200,7 @@ class wscompose:
     def load_provider (self, value) :
 
 	if value.startswith('http://') or value.startswith('https://'):
-	    return ModestMaps.Providers.TemplatedMercatorProvider(value, self.ctx['tilestache_cached'])
+	    return ModestMaps.Providers.TemplatedMercatorProvider(value)
         elif value in ModestMaps.builtinProviders:
 	    return ModestMaps.builtinProviders[value]()
         else :
@@ -554,7 +554,6 @@ class WSGIComposeServer:
             status = '200 OK'
 
         except Exception, e:
-
             status = '500 SERVER ERROR'
             content_type = 'text/plain'
             data = str(e)
