@@ -82,7 +82,7 @@ import Tiles
 import Providers
 import Core
 import Geo
-import Yahoo, Microsoft, BlueMarble, OpenStreetMap, CloudMade
+import Yahoo, Microsoft, BlueMarble, OpenStreetMap, CloudMade, MapQuest
 import time
 
 # a handy list of possible providers, which isn't
@@ -91,6 +91,8 @@ builtinProviders = {
     'OPENSTREETMAP':    OpenStreetMap.Provider,
     'OPEN_STREET_MAP':  OpenStreetMap.Provider,
     'BLUE_MARBLE':      BlueMarble.Provider,
+    'MAPQUEST_ROAD':   MapQuest.RoadProvider,
+    'MAPQUEST_AERIAL':   MapQuest.AerialProvider,
     'MICROSOFT_ROAD':   Microsoft.RoadProvider,
     'MICROSOFT_AERIAL': Microsoft.AerialProvider,
     'MICROSOFT_HYBRID': Microsoft.HybridProvider,
