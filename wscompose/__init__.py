@@ -496,9 +496,8 @@ class wscompose:
 
         return "\n\n".join([
                 help_header("Questions"),
-                help_qa("Is it fast?", "Not really. It is designed, primarily, to be run on the same machine that is calling the interface."),
                 help_qa("Will it ever be fast?", "Sure. The ws-compose.py script is just a thin wrapper around a WSGI compliant server which means you can run it with zippy web frameworks like gunicorn(.org). For example:"),
-                help_pre("\t$> /usr/local/bin/gunicorn --options wscompose.WSGIComposeServer:application"),
+                help_pre("\t$> gunicorn -b 'localhost:9999' -w 4 \"wscompose:WSGIComposeServer()\""),
                 help_qa("Can I request map images asynchronously?", "Not yet."),
                 help_qa("Can I get a pony?", "No.")
                 ])
