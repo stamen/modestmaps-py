@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import optparse
 import wscompose
 

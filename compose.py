@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 # vim:et sts=4 sw=4:
 
 import sys, math, optparse, ModestMaps
