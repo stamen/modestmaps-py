@@ -254,7 +254,15 @@ class TileRequest:
                     if verbose:
                         printlocked(lock, 'Found', urlparse.urlunparse(('http', netloc, path, '', query, '')), 'in cache')
             
-                else:
+                elif scheme in ('file', ''):
+                    img = Image.open(path).convert('RGBA')
+                    imgs.append(img)
+
+                    if lock.acquire():
+                        cache[(netloc, path, query)] = img
+                        lock.release()
+                
+                elif scheme == 'http':
                     conn = httplib.HTTPConnection(netloc)
                     conn.request('GET', path + ('?' + query).rstrip('?'), headers={'User-Agent': 'Modest Maps python branch (http://modestmaps.com)'})
                     response = conn.getresponse()
