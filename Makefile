@@ -1,4 +1,4 @@
-VERSION=1.2.1
+VERSION:=$(shell cat VERSION)
 PACKAGE=ModestMaps-$(VERSION)
 TARBALL=ModestMaps-Py-$(VERSION).tar.gz
 DOCROOT=modestmaps.com:public_html/modestmaps
@@ -16,6 +16,10 @@ $(TARBALL):
 
 	mkdir $(PACKAGE)/ModestMaps
 	ln ModestMaps/*.py $(PACKAGE)/ModestMaps/
+
+	rm $(PACKAGE)/ModestMaps/__init__.py
+	cp ModestMaps/__init__.py $(PACKAGE)/ModestMaps/__init__.py
+	perl -pi -e 's#\bN\.N\.N\b#$(VERSION)#' $(PACKAGE)/ModestMaps/__init__.py
 
 	tar -czf $(TARBALL) $(PACKAGE)
 	rm -rf $(PACKAGE)

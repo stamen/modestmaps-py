@@ -62,6 +62,8 @@
 (-246.000, -179.000)
 """
 
+__version__ = 'N.N.N'
+
 import sys
 import urllib
 import httplib
