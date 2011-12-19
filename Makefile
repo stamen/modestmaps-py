@@ -13,6 +13,7 @@ live: $(TARBALL)
 $(TARBALL):
 	mkdir $(PACKAGE)
 	ln setup.py $(PACKAGE)/
+	ln VERSION $(PACKAGE)/
 
 	mkdir $(PACKAGE)/ModestMaps
 	ln ModestMaps/*.py $(PACKAGE)/ModestMaps/
