@@ -74,6 +74,10 @@ if __name__ == '__main__':
                 provider = ModestMaps.builtinProviders[options.provider](options.apikey)
             elif options.provider.startswith('http://'):
                 provider = ModestMaps.Providers.TemplatedMercatorProvider(options.provider)
+            elif options.provider.startswith('https://'):
+                provider = ModestMaps.Providers.TemplatedMercatorProvider(options.provider)
+            elif options.provider.startswith('file://'):
+                provider = ModestMaps.Providers.TemplatedMercatorProvider(options.provider)
             else:
                 provider = ModestMaps.builtinProviders[options.provider]()
         except KeyError:

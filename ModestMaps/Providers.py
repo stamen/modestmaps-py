@@ -54,7 +54,7 @@ class TemplatedMercatorProvider(IMapProvider):
         self.templates = []
         
         while template:
-            match = re.match(r'^(http://\S+?)(,http://\S+)?$', template)
+            match = re.match(r'^((http|https|file)://\S+?)(,(http|https|file)://\S+)?$', template)
             first = match.group(1)
             
             if match:
