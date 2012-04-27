@@ -1,6 +1,6 @@
 VERSION:=$(shell cat VERSION)
 PACKAGE=ModestMaps-$(VERSION)
-TARBALL=ModestMaps-Py-$(VERSION).tar.gz
+TARBALL=$(PACKAGE).tar.gz
 DOCROOT=py.modestmaps.com:/var/www/py.modestmaps.com
 
 all: $(TARBALL)
