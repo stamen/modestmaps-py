@@ -11,5 +11,5 @@ setup(name='ModestMaps',
       url='http://modestmaps.com',
       requires=['PIL'],
       packages=['ModestMaps'],
-      download_url='http://py.modestmaps.com/dist/ModestMaps-Py-%(version)s.tar.gz' % locals(),
+      download_url='http://py.modestmaps.com/dist/ModestMaps-%(version)s.tar.gz' % locals(),
       license='BSD')
