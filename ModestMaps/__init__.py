@@ -84,7 +84,7 @@ import Tiles
 import Providers
 import Core
 import Geo
-import Yahoo, Microsoft, BlueMarble, OpenStreetMap, CloudMade, MapQuest
+import Yahoo, Microsoft, BlueMarble, OpenStreetMap, CloudMade, MapQuest, Stamen
 import time
 
 # a handy list of possible providers, which isn't
@@ -106,7 +106,10 @@ builtinProviders = {
     'CLOUDMADE_TOURIST': CloudMade.TouristProvider,
     'CLOUDMADE_FRESH':  CloudMade.FreshProvider,
     'CLOUDMADE_PALEDAWN': CloudMade.PaleDawnProvider,
-    'CLOUDMADE_MIDNIGHTCOMMANDER': CloudMade.MidnightCommanderProvider
+    'CLOUDMADE_MIDNIGHTCOMMANDER': CloudMade.MidnightCommanderProvider,
+    'STAMEN_TONER': Stamen.TonerProvider,
+    'STAMEN_TERRAIN': Stamen.TerrainProvider,
+    'STAMEN_WATERCOLOR': Stamen.WatercolorProvider,
     }
 
 def mapByCenterZoom(provider, center, zoom, dimensions):
