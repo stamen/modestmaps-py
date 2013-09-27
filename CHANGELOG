@@ -1,3 +1,7 @@
+2013-09-26: 1.4.2
+- Made PIL an optional import, since it's often not needed.
+- Added Stamen map providers.
+
 2012-02-19: 1.4.1
 - Fixed package filename to improve compatibility with pip version expectations.
 

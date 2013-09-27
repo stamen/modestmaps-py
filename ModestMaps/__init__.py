@@ -76,9 +76,12 @@ import time
 try:
     import Image
 except ImportError:
-    # you need PIL to do any actual drawing, but
-    # maybe that's not what you're using MMaps for?
-    import PIL.Image as Image
+    try:
+        import PIL.Image as Image
+    except ImportError:
+        # you need PIL to do any actual drawing, but
+        # maybe that's not what you're using MMaps for?
+        Image = None
 
 import Tiles
 import Providers
