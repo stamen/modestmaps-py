@@ -1,3 +1,9 @@
+2014-05-10: 1.4.4
+- Added VERSION to manifest so installations will work.
+
+2014-05-10: 1.4.3
+- Removed setup.py download_url to host with PyPI.
+
 2013-09-26: 1.4.2
 - Made PIL an optional import, since it's often not needed.
 - Added Stamen map providers.

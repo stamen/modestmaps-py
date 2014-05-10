@@ -1,0 +1,12 @@
+setup.py
+VERSION
+ModestMaps/BlueMarble.py
+ModestMaps/CloudMade.py
+ModestMaps/Core.py
+ModestMaps/Geo.py
+ModestMaps/Microsoft.py
+ModestMaps/OpenStreetMap.py
+ModestMaps/Providers.py
+ModestMaps/Tiles.py
+ModestMaps/Yahoo.py
+ModestMaps/__init__.py
