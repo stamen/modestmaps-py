@@ -62,7 +62,9 @@
 (-246.000, -179.000)
 """
 
-__version__ = 'N.N.N'
+import os.path
+
+__version__ = open(os.path.join(os.path.dirname(__file__), '../VERSION')).read().strip()
 
 import sys
 import urllib
