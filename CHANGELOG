@@ -1,3 +1,6 @@
+2014-05-10: 1.4.6
+- Moved VERSION to setup package_data so it will actually work.
+
 2014-05-10: 1.4.5
 - Added VERSION to __init__.py instead of Perl-based regexp.
 

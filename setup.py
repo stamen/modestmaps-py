@@ -2,7 +2,7 @@
 
 from distutils.core import setup
 
-version = open('VERSION', 'r').read().strip()
+version = open('ModestMaps/VERSION', 'r').read().strip()
 
 setup(name='ModestMaps',
       version=version,
@@ -11,4 +11,5 @@ setup(name='ModestMaps',
       url='http://modestmaps.com',
       requires=['PIL'],
       packages=['ModestMaps'],
+      package_data={'ModestMaps': ['VERSION']},
       license='BSD')
