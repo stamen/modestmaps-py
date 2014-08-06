@@ -30,6 +30,10 @@
 >>> p = TonerBackgroundProvider()
 >>> p.getTileUrls(Coordinate(25322, 10507, 16)) #doctest: +ELLIPSIS
 ('http://tile.stamen.com/toner-background/16/10507/25322.png',)
+
+>>> p = TonerLiteProvider()
+>>> p.getTileUrls(Coordinate(25322, 10507, 16)) #doctest: +ELLIPSIS
+('http://tile.stamen.com/toner-lite/16/10507/25322.png',)
 """
 
 from math import pi
@@ -86,6 +90,10 @@ class TonerLinesProvider(BaseProvider):
 class TonerBackgroundProvider(BaseProvider):
     def __init__(self):
         BaseProvider.__init__(self, 'toner-background', 'png')
+
+class TonerLiteProvider(BaseProvider):
+    def __init__(self):
+        BaseProvider.__init__(self, 'toner-lite', 'png')
 
 if __name__ == '__main__':
     import doctest
