@@ -18,6 +18,10 @@
 >>> p = TonerHybridProvider()
 >>> p.getTileUrls(Coordinate(25322, 10507, 16)) #doctest: +ELLIPSIS
 ('http://tile.stamen.com/toner-hybrid/16/10507/25322.png',)
+
+>>> p = TonerLabelsProvider()
+>>> p.getTileUrls(Coordinate(25322, 10507, 16)) #doctest: +ELLIPSIS
+('http://tile.stamen.com/toner-labels/16/10507/25322.png',)
 """
 
 from math import pi
@@ -62,6 +66,10 @@ class WatercolorProvider(BaseProvider):
 class TonerHybridProvider(BaseProvider):
     def __init__(self):
         BaseProvider.__init__(self, 'toner-hybrid', 'png')
+
+class TonerLabelsProvider(BaseProvider):
+    def __init__(self):
+        BaseProvider.__init__(self, 'toner-labels', 'png')
 
 if __name__ == '__main__':
     import doctest
