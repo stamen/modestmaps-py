@@ -14,6 +14,10 @@
 >>> p = WatercolorProvider()
 >>> p.getTileUrls(Coordinate(25322, 10507, 16)) #doctest: +ELLIPSIS
 ('http://tile.stamen.com/watercolor/16/10507/25322.jpg',)
+
+>>> p = TonerHybridProvider()
+>>> p.getTileUrls(Coordinate(25322, 10507, 16)) #doctest: +ELLIPSIS
+('http://tile.stamen.com/toner-hybrid/16/10507/25322.png',)
 """
 
 from math import pi
@@ -54,6 +58,10 @@ class TerrainProvider(BaseProvider):
 class WatercolorProvider(BaseProvider):
     def __init__(self):
         BaseProvider.__init__(self, 'watercolor', 'jpg')
+
+class TonerHybridProvider(BaseProvider):
+    def __init__(self):
+        BaseProvider.__init__(self, 'toner-hybrid', 'png')
 
 if __name__ == '__main__':
     import doctest
