@@ -36,6 +36,9 @@ class IMapProvider:
             
         return Coordinate(coordinate.row, wrappedColumn, coordinate.zoom)
 
+    def tiles_are_images(self):
+        return True
+
 class TemplatedMercatorProvider(IMapProvider):
     """ Convert URI templates into tile URLs, using a tileUrlTemplate identical to:
         http://code.google.com/apis/maps/documentation/overlays.html#Custom_Map_Types

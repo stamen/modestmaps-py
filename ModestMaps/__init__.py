@@ -254,7 +254,7 @@ class TileRequest:
         # this is the time-consuming part
         try:
             imgs = []
-        
+
             for (scheme, netloc, path, params, query, fragment) in map(urlparse.urlparse, urls):
                 if (netloc, path, query) in cache:
                     if lock.acquire():
@@ -265,7 +265,12 @@ class TileRequest:
                         printlocked(lock, 'Found', urlparse.urlunparse(('http', netloc, path, '', query, '')), 'in cache')
             
                 elif scheme in ('file', ''):
-                    img = Image.open(path).convert('RGBA')
+                    if self.provider.tiles_are_images():
+                        img = Image.open(path).convert('RGBA')
+                    else:
+                        fp = builtins.open(fp, "rb")
+                        img = fp.read()
+                        fp.close()
                     imgs.append(img)
 
                     if lock.acquire():
@@ -277,16 +282,19 @@ class TileRequest:
                     conn.request('GET', path + ('?' + query).rstrip('?'), headers={'User-Agent': 'Modest Maps python branch (http://modestmaps.com)'})
                     response = conn.getresponse()
                     status = str(response.status)
-                    
+
                     if status.startswith('2'):
-                        img = Image.open(StringIO.StringIO(response.read())).convert('RGBA')
+                        if self.provider.tiles_are_images():
+                            img = Image.open(StringIO.StringIO(response.read())).convert('RGBA')
+                        else:
+                            img = response.read()
                         imgs.append(img)
     
                         if lock.acquire():
                             cache[(netloc, path, query)] = img
                             lock.release()
                     
-                    elif status == '404' and fatbits_ok:
+                    elif status == '404' and fatbits_ok and self.provider.tiles_are_images():
                         #
                         # We're probably never going to see this tile.
                         # Try the next lower zoom level for a pixellated output?
@@ -308,8 +316,10 @@ class TileRequest:
                         self.coord = parent
     
                         return self.load(lock, verbose, cache, fatbits_ok, attempt+1, scale*2)
+                else:
+                    raise ValueError('unknown fetching scheme.')
 
-            if scale > 1:
+            if scale > 1 and self.provider.tiles_are_images():
                 imgs = [img.resize((img.size[0] * scale, img.size[1] * scale)) for img in imgs]
                 
         except:
@@ -491,25 +501,23 @@ class Map:
         self.dimensions = Core.Point(width, height)
 
         return self.draw()
-    
+
     #
-    
-    def draw(self, verbose=False, fatbits_ok=False):
-        """ Draw map out to a PIL.Image and return it.
-        """
+
+    def build_tile_queue(self):
         coord = self.coordinate.copy()
         corner = Core.Point(int(self.offset.x + self.dimensions.x/2), int(self.offset.y + self.dimensions.y/2))
 
         while corner.x > 0:
             corner.x -= self.provider.tileWidth()
             coord = coord.left()
-        
+
         while corner.y > 0:
             corner.y -= self.provider.tileHeight()
             coord = coord.up()
-        
+
         tiles = TileQueue()
-        
+
         rowCoord = coord.copy()
         for y in range(corner.y, self.dimensions.y, self.provider.tileHeight()):
             tileCoord = rowCoord.copy()
@@ -518,29 +526,42 @@ class Map:
                 tileCoord = tileCoord.right()
             rowCoord = rowCoord.down()
 
+        return tiles
+
+    #
+    
+    def draw(self, verbose=False, fatbits_ok=False):
+        """ Draw map out to a PIL.Image and return it.
+        """
+        tiles = self.build_tile_queue()
         return self.render_tiles(tiles, self.dimensions.x, self.dimensions.y, verbose, fatbits_ok)
+
+    #
+
+    def fetch_tiles(self, tiles, verbose=False, fatbits_ok=False):
+        lock = thread.allocate_lock()
+        threads = 32
+        cache = {}
+
+        for off in range(0, len(tiles), threads):
+            pool = tiles[off:(off + threads)]
+
+            for tile in pool:
+                # request all needed images
+                thread.start_new_thread(tile.load, (lock, verbose, cache, fatbits_ok))
+
+            # if it takes any longer than 20 sec overhead + 10 sec per tile, give up
+            due = time.time() + 20 + len(pool) * 10
+
+            while time.time() < due and pool.pending():
+                # hang around until they are loaded or we run out of time...
+                time.sleep(1)
 
     #
     
     def render_tiles(self, tiles, img_width, img_height, verbose=False, fatbits_ok=False):
-        
-        lock = thread.allocate_lock()
-        threads = 32
-        cache = {}
-        
-        for off in range(0, len(tiles), threads):
-            pool = tiles[off:(off + threads)]
-            
-            for tile in pool:
-                # request all needed images
-                thread.start_new_thread(tile.load, (lock, verbose, cache, fatbits_ok))
-                
-            # if it takes any longer than 20 sec overhead + 10 sec per tile, give up
-            due = time.time() + 20 + len(pool) * 10
-            
-            while time.time() < due and pool.pending():
-                # hang around until they are loaded or we run out of time...
-                time.sleep(1)
+
+        self.fetch_tiles(tiles, verbose, fatbits_ok)
 
         mapImg = Image.new('RGB', (img_width, img_height))
         
@@ -553,6 +574,20 @@ class Map:
                 pass
 
         return mapImg
+
+    #
+
+    def get_tile_data(self, verbose=False, fatbits_ok=False):
+        """ Fetch all of the tiles necessary and return them as a TileQueue.
+        :param verbose:
+        :param fatbits_ok:
+        :return: TileQueue of loaded TileRequests.
+        """
+        tiles = self.build_tile_queue()
+
+        self.fetch_tiles(tiles, verbose, fatbits_ok)
+
+        return tiles
 
 if __name__ == '__main__':
     import doctest
