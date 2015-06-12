@@ -221,7 +221,7 @@ def printlocked(lock, *stuff):
     """
     """
     if lock.acquire():
-        print ' '.join([str(thing) for thing in stuff])
+        print >> sys.stderr, ' '.join([str(thing) for thing in stuff])
         lock.release()
 
 class TileRequest:
