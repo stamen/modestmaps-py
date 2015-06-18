@@ -14,6 +14,26 @@
 >>> p = WatercolorProvider()
 >>> p.getTileUrls(Coordinate(25322, 10507, 16)) #doctest: +ELLIPSIS
 ('http://tile.stamen.com/watercolor/16/10507/25322.jpg',)
+
+>>> p = TonerHybridProvider()
+>>> p.getTileUrls(Coordinate(25322, 10507, 16)) #doctest: +ELLIPSIS
+('http://tile.stamen.com/toner-hybrid/16/10507/25322.png',)
+
+>>> p = TonerLabelsProvider()
+>>> p.getTileUrls(Coordinate(25322, 10507, 16)) #doctest: +ELLIPSIS
+('http://tile.stamen.com/toner-labels/16/10507/25322.png',)
+
+>>> p = TonerLinesProvider()
+>>> p.getTileUrls(Coordinate(25322, 10507, 16)) #doctest: +ELLIPSIS
+('http://tile.stamen.com/toner-lines/16/10507/25322.png',)
+
+>>> p = TonerBackgroundProvider()
+>>> p.getTileUrls(Coordinate(25322, 10507, 16)) #doctest: +ELLIPSIS
+('http://tile.stamen.com/toner-background/16/10507/25322.png',)
+
+>>> p = TonerLiteProvider()
+>>> p.getTileUrls(Coordinate(25322, 10507, 16)) #doctest: +ELLIPSIS
+('http://tile.stamen.com/toner-lite/16/10507/25322.png',)
 """
 
 from math import pi
@@ -54,6 +74,26 @@ class TerrainProvider(BaseProvider):
 class WatercolorProvider(BaseProvider):
     def __init__(self):
         BaseProvider.__init__(self, 'watercolor', 'jpg')
+
+class TonerHybridProvider(BaseProvider):
+    def __init__(self):
+        BaseProvider.__init__(self, 'toner-hybrid', 'png')
+
+class TonerLabelsProvider(BaseProvider):
+    def __init__(self):
+        BaseProvider.__init__(self, 'toner-labels', 'png')
+
+class TonerLinesProvider(BaseProvider):
+    def __init__(self):
+        BaseProvider.__init__(self, 'toner-lines', 'png')
+
+class TonerBackgroundProvider(BaseProvider):
+    def __init__(self):
+        BaseProvider.__init__(self, 'toner-background', 'png')
+
+class TonerLiteProvider(BaseProvider):
+    def __init__(self):
+        BaseProvider.__init__(self, 'toner-lite', 'png')
 
 if __name__ == '__main__':
     import doctest
