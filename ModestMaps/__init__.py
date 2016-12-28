@@ -2,7 +2,7 @@
 >>> m = Map(Microsoft.RoadProvider(), Core.Point(600, 600), Core.Coordinate(3165, 1313, 13), Core.Point(-144, -94))
 >>> p = m.locationPoint(Geo.Location(37.804274, -122.262940))
 >>> p
-(370.724, 342.549)
+(370.752, 342.626)
 >>> m.pointLocation(p)
 (37.804, -122.263)
 
