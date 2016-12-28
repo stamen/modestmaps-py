@@ -8,11 +8,11 @@
 
 from math import pi
 
-from Core import Coordinate
-from Geo import MercatorProjection, deriveTransformation
-from Providers import IMapProvider
+from .Core import Coordinate
+from .Geo import MercatorProjection, deriveTransformation
+from .Providers import IMapProvider
 
-import Tiles
+from . import Tiles
 
 class Provider(IMapProvider):
     def __init__(self):

@@ -68,12 +68,20 @@ __version__ = open(os.path.join(os.path.dirname(__file__), 'VERSION')).read().st
 
 import sys
 import urllib
-import httplib
-import urlparse
-import StringIO
 import math
-import thread
 import time
+
+try:
+    import httplib
+    import urlparse
+    import StringIO
+    import thread
+except ImportError:
+    # Python 3
+    import http.client as httplib
+    import urllib.parse as urlparse
+    from io import StringIO
+    import _thread as thread
 
 try:
     import Image
@@ -85,11 +93,11 @@ except ImportError:
         # maybe that's not what you're using MMaps for?
         Image = None
 
-import Tiles
-import Providers
-import Core
-import Geo
-import Yahoo, Microsoft, BlueMarble, OpenStreetMap, CloudMade, MapQuest, Stamen
+from . import Tiles
+from . import Providers
+from . import Core
+from . import Geo
+from . import Yahoo, Microsoft, BlueMarble, OpenStreetMap, CloudMade, MapQuest, Stamen
 import time
 
 # a handy list of possible providers, which isn't

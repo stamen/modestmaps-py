@@ -1,8 +1,8 @@
 ﻿import re
 from math import pi, pow
 
-from Core import Coordinate
-from Geo import LinearProjection, MercatorProjection, deriveTransformation
+from .Core import Coordinate
+from .Geo import LinearProjection, MercatorProjection, deriveTransformation
 
 ids = ('MICROSOFT_ROAD', 'MICROSOFT_AERIAL', 'MICROSOFT_HYBRID',
        'YAHOO_ROAD',     'YAHOO_AERIAL',     'YAHOO_HYBRID',
