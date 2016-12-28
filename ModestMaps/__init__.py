@@ -182,7 +182,7 @@ def calculateMapExtent(provider, width, height, *args):
         returns the coordinate of an initial tile and its point placement,
         relative to the map center.
     """
-    coordinates = map(provider.locationCoordinate, args)
+    coordinates = list(map(provider.locationCoordinate, args))
     
     TL = Core.Coordinate(min([c.row for c in coordinates]),
                          min([c.column for c in coordinates]),
