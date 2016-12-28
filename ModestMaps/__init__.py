@@ -1,3 +1,4 @@
+from __future__ import print_function
 """
 >>> m = Map(Microsoft.RoadProvider(), Core.Point(600, 600), Core.Coordinate(3165, 1313, 13), Core.Point(-144, -94))
 >>> p = m.locationPoint(Geo.Location(37.804274, -122.262940))
@@ -229,7 +230,7 @@ def printlocked(lock, *stuff):
     """
     """
     if lock.acquire():
-        print >> sys.stderr, ' '.join([str(thing) for thing in stuff])
+        print(' '.join([str(thing) for thing in stuff]), file=sys.stderr)
         lock.release()
 
 class TileRequest:
