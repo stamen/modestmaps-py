@@ -83,7 +83,7 @@ def toBinaryString(i):
     """
     return ''.join([octalStrings[int(c)]
                     for c
-                    in oct(i)]).lstrip('0')
+                    in oct(i).lstrip('0o')]).lstrip('0')
 
 def fromBinaryString(s):
     """ Return an integer for a binary string.
