@@ -36,7 +36,7 @@ def _myDet(p, q, r):
     """Calc. determinant of a special matrix with three 2D points.
 
     The sign, "-" or "+", determines the side, right or left,
-    respectivly, on which the point r lies, when measured against
+    respectively, on which the point r lies, when measured against
     a directed vector from p to q.
     """
 
