@@ -75,13 +75,13 @@ import time
 try:
     import httplib
     import urlparse
-    import StringIO
+    from StringIO import StringIO as BytesIO
     import thread
 except ImportError:
     # Python 3
     import http.client as httplib
     import urllib.parse as urlparse
-    from io import StringIO
+    from io import BytesIO
     import _thread as thread
 
 try:
@@ -288,7 +288,7 @@ class TileRequest:
                     status = str(response.status)
                     
                     if status.startswith('2'):
-                        img = Image.open(StringIO.StringIO(response.read())).convert('RGBA')
+                        img = Image.open(BytesIO(response.read())).convert('RGBA')
                         imgs.append(img)
     
                         if lock.acquire():
@@ -344,19 +344,20 @@ class TileQueue(list):
     """ List of TileRequest objects, that's sensitive to when they're loaded.
     """
 
-    def __getslice__(self, i, j):
+    def __getitem__(self, val):
         """ Return a TileQueue when a list slice is called-for.
         
             Python docs say that __getslice__ is deprecated, but its
             replacement __getitem__ doesn't seem to be doing anything.
         """
-        other = TileQueue()
-        
-        for t in range(i, j):
-            if t < len(self):
-                other.append(self[t])
-
-        return other
+        if isinstance(val, slice):
+            other = TileQueue()
+            for t in range(val.start, val.stop):
+                if t < len(self):
+                    other.append(self[t])
+            return other
+        else:
+            return super().__getitem__(val)
 
     def pending(self):
         """ True if any contained tile is still loading.
